@@ -1,0 +1,1616 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>大将軍弁当予約システム</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase JS クライアント -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@700;800;900&family=Noto+Sans+JP:wght@500;700;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        appWarmBg: '#FFFDF9',
+                        appAccentRed: '#D9534F',
+                        appWarmAmber: '#E67E22',
+                        appSoftCream: '#FDF6E3',
+                        appDeepBrown: '#4A3B32',
+                        appNavyAccent: '#34495E',
+                        appBalanGreen: '#1E6B38',
+                        appBalanDark: '#134A25',
+                    },
+                    fontFamily: {
+                        pop: ['"Zen Maru Gothic"', '"Noto Sans JP"', 'sans-serif'],
+                        sans: ['"Noto Sans JP"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background: linear-gradient(180deg, #F9EBE0 0%, #F5E1D3 50%, #E8D3C3 100%);
+            color: #4A3B32;
+            font-family: 'Noto Sans JP', sans-serif;
+            min-height: 100vh;
+            position: relative;
+            padding-bottom: 120px;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* 視認性の高いPopタイトルデザイン */
+        .pop-title {
+            font-family: 'Zen Maru Gothic', 'Noto Sans JP', sans-serif;
+            font-weight: 900;
+            color: #C0392B;
+            -webkit-text-stroke: 2px #ffffff;
+            paint-order: stroke fill;
+            letter-spacing: -0.01em;
+            filter: drop-shadow(0px 3px 6px rgba(139, 69, 19, 0.2));
+        }
+        /* アニメーション：ふわっと立ち上がり */
+        .fade-in-up {
+            animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(12px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        /* アニメーション：ブタのダイナミックな跳ね（ビヨンビヨン） */
+        .pig-bounce-spring {
+            animation: pigSpring 2.2s infinite ease-in-out;
+            transform-origin: bottom center;
+        }
+        @keyframes pigSpring {
+            0%, 100% { transform: translateY(0) scale(1, 1) rotate(0deg); }
+            15% { transform: translateY(-16px) scale(0.92, 1.1) rotate(-3deg); }
+            30% { transform: translateY(0) scale(1.12, 0.88) rotate(2deg); }
+            45% { transform: translateY(-8px) scale(0.97, 1.04) rotate(-1deg); }
+            60% { transform: translateY(0) scale(1.05, 0.95) rotate(0deg); }
+        }
+        /* タップ時の弾むフィードバック */
+        .pig-tap-pop {
+            animation: pigPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+        }
+        @keyframes pigPop {
+            0% { transform: scale(0.8) rotate(-10deg); }
+            50% { transform: scale(1.25) rotate(10deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+        /* 光る確定ボタンのエフェクト */
+        .btn-shine-effect {
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-shine-effect::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -60%;
+            width: 50%;
+            height: 200%;
+            background: linear-gradient(
+                to right,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.45) 50%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            transform: rotate(25deg);
+            animation: shineSweep 3.5s infinite ease-in-out;
+        }
+        @keyframes shineSweep {
+            0% { left: -60%; }
+            20% { left: 130%; }
+            100% { left: 130%; }
+        }
+        /* 脈動バッジ */
+        .pulse-badge {
+            animation: pulseBadge 2s infinite ease-in-out;
+        }
+        @keyframes pulseBadge {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0px rgba(217, 83, 79, 0)); }
+            50% { transform: scale(1.04); filter: drop-shadow(0 2px 8px rgba(217, 83, 79, 0.3)); }
+        }
+        /* お弁当の仕切り「バラン」風の下部装飾 */
+        .balan-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 55px;
+            z-index: 10;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .balan-leaf {
+            width: 100%;
+            height: 100%;
+            background-repeat: repeat-x;
+            background-size: 32px 100%;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 80' preserveAspectRatio='none'%3E%3Cpath d='M0 80 L0 30 L8 0 L14 26 L20 4 L26 28 L34 2 L40 25 L40 80 Z' fill='%231E6B38'/%3E%3Cpath d='M0 80 L0 42 L6 20 L12 38 L18 18 L24 38 L32 15 L40 35 L40 80 Z' fill='%23134A25' opacity='0.5'/%3E%3C/svg%3E");
+            filter: drop-shadow(0px -3px 4px rgba(0, 0, 0, 0.12));
+        }
+        /* 吹き出しスタイル */
+        .pig-speech-bubble {
+            position: relative;
+            background: #ffffff;
+            border: 2px solid #FCD5D6;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        }
+        .pig-speech-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -9px;
+            right: 22px;
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 9px solid #ffffff;
+        }
+        .pig-speech-bubble::before {
+            content: '';
+            position: absolute;
+            bottom: -12px;
+            right: 21px;
+            width: 0;
+            height: 0;
+            border-left: 9px solid transparent;
+            border-right: 9px solid transparent;
+            border-top: 10px solid #FCD5D6;
+        }
+        /* 紙吹雪パーティクル CSS */
+        .confetti-particle {
+            position: fixed;
+            z-index: 9999;
+            pointer-events: none;
+            border-radius: 3px;
+            animation: confettiFall 2.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+        @keyframes confettiFall {
+            0% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(1); }
+            100% { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(0.6); }
+        }
+    </style>
+</head>
+<body class="px-3 sm:px-4 py-4 md:py-6 flex flex-col items-center">
+
+    <!-- 画面背景のふわふわ浮遊背景アイテム（賑やかさの演出） -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden z-0 opacity-20">
+        <span class="absolute top-10 left-5 text-3xl animate-bounce" style="animation-duration: 4s;">🍱</span>
+        <span class="absolute top-1/3 left-2 text-2xl animate-bounce" style="animation-duration: 5s; animation-delay: 1s;">🍙</span>
+        <span class="absolute top-20 right-8 text-3xl animate-bounce" style="animation-duration: 4.5s; animation-delay: 0.5s;">🍗</span>
+        <span class="absolute bottom-1/3 right-4 text-2xl animate-bounce" style="animation-duration: 3.8s; animation-delay: 1.5s;">🍵</span>
+    </div>
+
+    <!-- ==================== スマホ対応：右下常駐 ビヨンビヨン跳ねるブタキャラクター ==================== -->
+    <div
+        id="interactivePigContainer"
+        class="fixed right-2 sm:right-6 bottom-12 z-40 flex flex-col items-end cursor-pointer group select-none transition-transform duration-200"
+        onclick="triggerPigReaction()"
+        title="タップしてね！"
+    >
+        <!-- 吹き出しメッセージ（動的に変更可能） -->
+        <div id="pigSpeech" class="pig-speech-bubble bg-white text-stone-800 text-[11px] sm:text-xs font-black px-3 py-1.5 rounded-2xl mb-1.5 transition-all duration-300 max-w-[150px] text-center leading-tight">
+            ブヒッ！前日21時締め切り<br><span class="text-appAccentRed font-black">早めの予約だブ！🐷</span>
+        </div>
+
+        <!-- ブタのSVGイラスト (跳ねるアニメーション付) -->
+        <div id="pigSvgWrapper" class="pig-bounce-spring flex items-center justify-center">
+            <svg class="w-20 h-20 sm:w-24 sm:h-24 filter drop-shadow-md transition-transform duration-150 group-active:scale-110" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- 耳 -->
+                <path d="M30 38C22 25 35 15 42 28Z" fill="#F7C6C7" stroke="#EEB4B5" stroke-width="2"/>
+                <path d="M90 38C98 25 85 15 78 28Z" fill="#F7C6C7" stroke="#EEB4B5" stroke-width="2"/>
+                <!-- 顔本体 -->
+                <ellipse cx="60" cy="65" rx="38" ry="32" fill="#FCD5D6"/>
+                <!-- 鼻 -->
+                <ellipse cx="60" cy="68" rx="14" ry="10" fill="#F4A2A3"/>
+                <circle cx="54" cy="68" r="3" fill="#6B2D5C"/>
+                <circle cx="66" cy="68" r="3" fill="#6B2D5C"/>
+                <!-- 目 -->
+                <circle cx="42" cy="55" r="4.5" fill="#4A3B32"/>
+                <circle cx="43.5" cy="53.5" r="1.5" fill="#FFFFFF"/>
+                <circle cx="78" cy="55" r="4.5" fill="#4A3B32"/>
+                <circle cx="79.5" cy="53.5" r="1.5" fill="#FFFFFF"/>
+                <!-- ほっぺ -->
+                <ellipse cx="32" cy="64" rx="6" ry="4" fill="#E87A90" opacity="0.6"/>
+                <ellipse cx="88" cy="64" rx="6" ry="4" fill="#E87A90" opacity="0.6"/>
+                <!-- シェフハット -->
+                <path d="M48 36C42 25 55 20 60 25C65 18 78 22 72 36Z" fill="#FFFFFF"/>
+                <rect x="48" y="34" width="24" height="6" rx="2" fill="#34495E"/>
+                <!-- 抱えているお弁当箱 -->
+                <rect x="45" y="82" width="30" height="18" rx="4" fill="#D9534F"/>
+                <rect x="47" y="84" width="26" height="14" rx="2" fill="#FFFFFF"/>
+                <circle cx="53" cy="91" r="3" fill="#D9534F"/>
+                <rect x="60" y="87" width="10" height="8" rx="1" fill="#E67E22"/>
+            </svg>
+        </div>
+    </div>
+
+    <!-- メインコンテンツ容器 -->
+    <div id="appContainer" class="w-full max-w-xl mx-auto space-y-4 z-20 relative">
+
+        <!-- ヘッダーエリア -->
+        <header class="relative text-center pt-1 pb-1">
+            <div class="flex justify-end mb-2">
+                <button
+                    type="button"
+                    onclick="toggleAdminView()"
+                    id="adminSwitchBtn"
+                    class="px-3.5 py-1.5 text-xs font-black text-white bg-appNavyAccent hover:bg-slate-700 active:scale-95 rounded-full transition-all duration-200 shadow-md border-2 border-white flex items-center gap-1 cursor-pointer"
+                >
+                    <span>⚙️</span> 管理者メニュー
+                </button>
+            </div>
+
+            <div class="flex justify-center items-center gap-2 mb-1">
+                <span class="text-xl animate-bounce">🍱</span>
+                <span class="text-[11px] sm:text-xs font-black text-amber-900 bg-amber-100/90 px-3 py-0.5 rounded-full border border-amber-300 shadow-xs">学食＆購買のおいしい予約</span>
+                <span class="text-xl animate-bounce" style="animation-delay: 0.5s;">🍙</span>
+            </div>
+
+            <h1 class="text-3xl sm:text-5xl pop-title tracking-tight my-1">
+                大将軍弁当 予約システム
+            </h1>
+
+            <div class="flex items-center justify-center gap-2 mt-2">
+                <div class="inline-flex items-center gap-1 px-3.5 py-1 text-xs font-black text-stone-800 bg-amber-100 rounded-full shadow-xs border border-amber-300/80 pulse-badge">
+                    <span>⏰</span> 受付締切: <strong class="text-appAccentRed font-black text-sm sm:text-base underline">前日 21:00 まで</strong>
+                </div>
+            </div>
+        </header>
+
+        <!-- ==================== 生徒用 予約ビュー ==================== -->
+        <main id="studentView" class="space-y-4">
+
+            <div id="closedBanner" class="hidden bg-stone-100 border-2 border-amber-300 text-stone-800 p-3.5 rounded-3xl text-center text-xs sm:text-sm font-black shadow-md fade-in-up">
+                ⚠️ 本日販売分の予約受付および変更・キャンセルは【前日21:00】で終了いたしました。
+            </div>
+
+            <div class="bg-appWarmBg border-2 border-orange-100 rounded-3xl p-4 sm:p-6 shadow-xl space-y-4">
+
+                <!-- スマホ最適化タブボタン -->
+                <div class="grid grid-cols-2 gap-2 p-1 bg-stone-100 rounded-2xl text-xs sm:text-sm font-black">
+                    <button
+                        type="button"
+                        id="tabNewOrder"
+                        onclick="switchStudentTab('new')"
+                        class="py-2.5 px-2 rounded-xl bg-appWarmAmber text-white shadow-xs transition-all duration-200 flex items-center justify-center gap-1 cursor-pointer active:scale-95"
+                    >
+                        <span>🍱</span> 新規予約する
+                    </button>
+                    <button
+                        type="button"
+                        id="tabMyOrders"
+                        onclick="switchStudentTab('my')"
+                        class="py-2.5 px-2 rounded-xl text-stone-600 hover:text-stone-900 transition-all duration-200 flex items-center justify-center gap-1 cursor-pointer active:scale-95"
+                    >
+                        <span>🔍</span> 予約の確認・変更
+                    </button>
+                </div>
+
+                <!-- 【タブ1】予約入力フォーム -->
+                <div id="reservationCard" class="space-y-4">
+
+                    <div id="statusMessage" class="hidden p-3.5 rounded-2xl text-xs sm:text-sm font-black border-2"></div>
+
+                    <form id="reservationForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
+
+                        <div id="targetDateNote" class="hidden text-xs font-black text-amber-900 bg-amber-50 border border-amber-200 rounded-2xl px-3.5 py-2"></div>
+
+                        <div class="space-y-1">
+                            <label class="block text-xs font-black text-stone-700 flex items-center gap-1" for="studentId">
+                                <span class="w-2 h-2 rounded-full bg-appWarmAmber"></span> 生徒番号 <span class="text-[10px] font-normal text-stone-500">(半角数字 4桁)</span>
+                            </label>
+                            <input
+                                type="number"
+                                id="studentId"
+                                inputmode="numeric"
+                                class="w-full px-4 py-3 bg-stone-50 border-2 border-stone-200 rounded-2xl text-base sm:text-lg font-black text-stone-800 placeholder-stone-400 outline-none transition-all duration-200 focus:border-appWarmAmber focus:bg-white focus:ring-2 focus:ring-amber-200"
+                                placeholder="例: 1101 (1年1組1番)"
+                                required
+                                min="1000"
+                                max="9999"
+                            >
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="block text-xs font-black text-stone-700 flex items-center justify-between" for="productName">
+                                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-appWarmAmber"></span> 予約商品を選ぶ</span>
+                            </label>
+                            <div class="relative">
+                                <select
+                                    id="productName"
+                                    class="w-full px-4 py-3 bg-stone-50 border-2 border-stone-200 rounded-2xl text-sm sm:text-base font-black text-stone-800 outline-none transition-all duration-200 focus:border-appWarmAmber focus:bg-white focus:ring-2 focus:ring-amber-200 appearance-none cursor-pointer pr-10 truncate"
+                                    onchange="updatePricePreview()"
+                                    required
+                                >
+                                    <option value="">メニューを選択してください</option>
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-stone-400">
+                                    <svg class="w-5 h-5 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="block text-xs font-black text-stone-700 flex items-center gap-1" for="quantity">
+                                <span class="w-2 h-2 rounded-full bg-appWarmAmber"></span> 注文個数
+                            </label>
+                            <div class="flex items-center gap-3">
+                                <input
+                                    type="number"
+                                    id="quantity"
+                                    inputmode="numeric"
+                                    class="w-full px-4 py-3 bg-stone-50 border-2 border-stone-200 rounded-2xl text-base sm:text-lg font-black text-stone-800 outline-none transition-all duration-200 focus:border-appWarmAmber focus:bg-white focus:ring-2 focus:ring-amber-200"
+                                    value="1"
+                                    min="1"
+                                    max="5"
+                                    onchange="updatePricePreview()"
+                                    oninput="updatePricePreview()"
+                                    required
+                                >
+                                <span class="text-sm font-black text-stone-600 whitespace-nowrap">個</span>
+                            </div>
+                        </div>
+
+                        <!-- 合計金額リアルタイム表示（ポップなアニメーション） -->
+                        <div class="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl px-4 py-3 flex justify-between items-center shadow-xs">
+                            <div class="space-y-0.5">
+                                <span class="text-xs font-bold text-stone-600 block">昼休みにお支払いいただく合計</span>
+                                <span class="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full">※購買窓口でお渡し</span>
+                            </div>
+                            <span id="pricePreview" class="text-2xl sm:text-3xl font-black text-appAccentRed font-pop tracking-tight transition-all duration-200">¥0</span>
+                        </div>
+
+                        <!-- 光る確定ボタン -->
+                        <button
+                            type="submit"
+                            id="submitBtn"
+                            class="btn-shine-effect w-full py-3.5 px-5 bg-gradient-to-r from-appWarmAmber to-amber-600 hover:from-amber-600 hover:to-appWarmAmber active:scale-[0.98] text-white font-black rounded-2xl text-base sm:text-lg tracking-wide transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer border-2 border-white/60 flex items-center justify-center gap-2"
+                        >
+                            <span>👍</span> この内容で予約を確定する！
+                        </button>
+                    </form>
+                </div>
+
+                <!-- 【タブ2】My予約確認・変更・削除カード -->
+                <div id="myOrdersCard" class="hidden space-y-4 fade-in-up">
+                    <div class="space-y-2 bg-stone-50 p-3.5 rounded-2xl border border-stone-200">
+                        <label class="block text-xs font-black text-stone-700" for="myStudentIdInput">
+                            自分の生徒番号を入力して検索
+                        </label>
+                        <div class="flex gap-2">
+                            <input
+                                type="number"
+                                id="myStudentIdInput"
+                                inputmode="numeric"
+                                class="w-full px-3.5 py-2.5 bg-white border-2 border-stone-200 rounded-xl text-base font-black outline-none focus:border-appWarmAmber"
+                                placeholder="生徒番号 (4桁)"
+                                min="1000"
+                                max="9999"
+                            >
+                            <button
+                                type="button"
+                                onclick="searchMyOrders()"
+                                class="px-5 py-2.5 bg-appWarmAmber hover:bg-amber-600 active:scale-95 text-white font-black text-xs sm:text-sm rounded-xl transition-all cursor-pointer shadow-xs whitespace-nowrap"
+                            >
+                                検索する
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="myOrdersStatus" class="hidden text-xs font-black p-3 rounded-xl border-2"></div>
+
+                    <div id="myOrdersResult" class="space-y-3">
+                        <p class="text-xs text-stone-400 text-center py-6 font-bold">生徒番号を入力して「検索する」を押してください</p>
+                    </div>
+                </div>
+
+                <!-- 予約完了チケット (レシート風 + 紙吹雪演出発生) -->
+                <div id="completionCard" class="hidden bg-gradient-to-b from-stone-50 to-amber-50/50 border-2 border-amber-200 rounded-3xl p-5 fade-in-up space-y-4 shadow-xs">
+                    <div class="text-center pb-3 border-b-2 border-dashed border-amber-200">
+                        <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500 text-white text-2xl font-black mb-1 shadow-md animate-bounce">
+                            ✓
+                        </div>
+                        <h2 class="text-xl sm:text-2xl font-black text-stone-800 font-pop">予約が完了しました！</h2>
+                        <p class="text-xs text-stone-600 font-bold mt-0.5">昼休みに購買窓口でこちらの確認画面をお見せください</p>
+                    </div>
+
+                    <div class="space-y-2.5 bg-white p-4 rounded-2xl border border-stone-200 text-xs sm:text-sm font-bold shadow-xs">
+                        <div class="flex justify-between items-center py-0.5">
+                            <span class="text-stone-500">生徒番号</span>
+                            <span id="resStudentId" class="font-black text-appWarmAmber text-lg sm:text-xl">-</span>
+                        </div>
+                        <div class="flex justify-between items-center py-0.5 border-t border-stone-100">
+                            <span class="text-stone-500">受け取り日</span>
+                            <span id="resPickupDate" class="text-stone-800 font-black">-</span>
+                        </div>
+                        <div class="flex justify-between items-center py-0.5 border-t border-stone-100">
+                            <span class="text-stone-500">予約商品</span>
+                            <span id="resProductName" class="text-stone-800 font-black">-</span>
+                        </div>
+                        <div class="flex justify-between items-center py-0.5 border-t border-stone-100">
+                            <span class="text-stone-500">注文個数</span>
+                            <span id="resQuantity" class="text-stone-800 font-black">-</span>
+                        </div>
+                        <div class="flex justify-between items-center py-1.5 border-t-2 border-stone-100 pt-2">
+                            <span class="text-stone-700">お支払合計</span>
+                            <span id="resTotalPrice" class="text-2xl sm:text-3xl font-black text-appAccentRed font-pop">-</span>
+                        </div>
+                        <div class="flex justify-between items-center py-0.5 border-t border-stone-100 text-[11px] text-stone-400 font-normal pt-1.5">
+                            <span>受付日時</span>
+                            <span id="resTime">-</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-amber-50/80 border border-amber-200 rounded-2xl p-3 text-xs text-stone-700 leading-relaxed font-bold flex items-start gap-2">
+                        <span class="text-base">📢</span>
+                        <div>
+                            <strong>受け取り方法:</strong> 昼休みに購買窓口で生徒番号 <strong id="noticeStudentId" class="text-appWarmAmber text-sm font-black underline">-</strong> をお伝えいただき、代金とお引き換えください。
+                        </div>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="w-full py-3.5 px-5 bg-stone-800 hover:bg-stone-900 text-white font-black rounded-2xl text-xs sm:text-sm transition-all duration-200 cursor-pointer shadow-md active:scale-95"
+                        onclick="resetToNewReservation()"
+                    >
+                        追加で予約する / フォームに戻る
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-stone-200">
+                    <div id="infoCard" class="bg-stone-50 border border-stone-200 rounded-2xl p-3 text-xs text-stone-600 space-y-1.5">
+                        <h3 class="font-black text-stone-800 flex items-center gap-1">
+                            <span class="w-2 h-2 rounded-full bg-appWarmAmber"></span> ご利用上の注意
+                        </h3>
+                        <ul class="space-y-1 pl-1 font-medium leading-relaxed text-[11px]">
+                            <li>• 予約・変更・取消は<strong class="text-appAccentRed font-black">前日 21:00 まで</strong>。</li>
+                            <li>• 代金引換と商品の受け渡しは<strong class="text-stone-800 font-black">昼休みに購買窓口</strong>で行います。</li>
+                        </ul>
+                    </div>
+
+                    <div id="rankingCard" class="hidden bg-stone-50 border border-amber-200 rounded-2xl p-3 text-xs space-y-2">
+                        <h3 class="font-black text-stone-800 flex items-center gap-1">
+                            <span>🔥</span> 予約人気 TOP 3
+                        </h3>
+                        <div id="rankingList" class="grid grid-cols-3 gap-1.5 text-center"></div>
+                    </div>
+                </div>
+
+            </div>
+
+        </main>
+
+        <!-- ==================== 管理者専用 ビュー ==================== -->
+        <section id="adminView" class="hidden space-y-4 fade-in-up">
+
+            <div id="adminLoginForm" class="bg-appWarmBg border-2 border-stone-200 rounded-3xl p-5 space-y-4 max-w-md mx-auto shadow-xl">
+                <div class="text-center space-y-1">
+                    <span class="text-3xl">🔐</span>
+                    <h2 class="text-lg font-black text-stone-800">管理者ログイン</h2>
+                    <p class="text-xs font-bold text-stone-500">購買スタッフ・教員用のパスワードを入力してください。</p>
+                </div>
+                <div class="space-y-1">
+                    <input
+                        type="password"
+                        id="adminPassInput"
+                        class="w-full px-4 py-2.5 bg-stone-50 border-2 border-stone-200 rounded-xl text-sm font-bold placeholder-stone-400 outline-none focus:border-appNavyAccent focus:bg-white"
+                        placeholder="パスワードを入力"
+                    >
+                    <div id="adminAuthError" class="hidden text-xs text-rose-600 font-bold pt-1"></div>
+                </div>
+                <div class="flex space-x-2">
+                    <button
+                        type="button"
+                        onclick="loginAdmin()"
+                        class="w-full py-2.5 bg-appNavyAccent hover:bg-slate-700 text-white font-black text-xs sm:text-sm rounded-xl transition-all cursor-pointer shadow-xs active:scale-95"
+                    >
+                        ログイン
+                    </button>
+                    <button
+                        type="button"
+                        onclick="toggleAdminView()"
+                        class="w-1/3 py-2.5 bg-stone-200 hover:bg-stone-300 text-stone-700 text-xs font-bold rounded-xl cursor-pointer"
+                    >
+                        戻る
+                    </button>
+                </div>
+            </div>
+
+            <!-- 管理者ダッシュボード -->
+            <div id="adminDashboard" class="hidden space-y-4">
+
+                <div class="flex flex-wrap justify-between items-center bg-appWarmBg border-2 border-stone-200 p-3.5 rounded-3xl shadow-md gap-2">
+                    <div class="flex items-center space-x-2">
+                        <span class="w-3 h-3 rounded-full bg-emerald-500 animate-ping"></span>
+                        <span class="text-sm sm:text-base font-black text-stone-800">管理者管理パネル</span>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button
+                            type="button"
+                            onclick="fetchAdminOrders()"
+                            class="px-3 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-black rounded-xl transition-colors cursor-pointer border border-stone-200 flex items-center gap-1 active:scale-95"
+                        >
+                            🔄 同期
+                        </button>
+                        <button
+                            type="button"
+                            onclick="logoutAdmin()"
+                            class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-black rounded-xl transition-colors border border-rose-200 cursor-pointer"
+                        >
+                            ログアウト
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 管理サブタブ -->
+                <div class="grid grid-cols-2 gap-2 p-1 bg-stone-200/80 rounded-2xl text-xs font-black">
+                    <button
+                        type="button"
+                        id="adminTabOrdersBtn"
+                        onclick="switchAdminSubTab('orders')"
+                        class="py-2 px-2 rounded-xl bg-appNavyAccent text-white shadow-xs transition-all cursor-pointer"
+                    >
+                        📋 受渡チェック
+                    </button>
+                    <button
+                        type="button"
+                        id="adminTabProductsBtn"
+                        onclick="switchAdminSubTab('products')"
+                        class="py-2 px-2 rounded-xl text-stone-600 hover:text-stone-900 transition-all cursor-pointer"
+                    >
+                        🍱 メニュー・在庫管理
+                    </button>
+                </div>
+
+                <div id="adminStatusAlert" class="hidden p-3 rounded-2xl text-xs font-black border-2 fade-in-up"></div>
+
+                <!-- サブタブ1: リアルタイム受渡管理 -->
+                <div id="adminOrdersSection" class="space-y-4">
+                    <div class="bg-appWarmBg border-2 border-stone-200 rounded-3xl p-4 shadow-md space-y-2">
+                        <div class="flex items-center justify-between gap-2">
+                            <h3 class="text-[11px] font-black text-stone-500 uppercase tracking-wider">商品別 予約・受渡進捗</h3>
+                            <label class="flex items-center gap-1 text-[11px] font-black text-stone-600">
+                                受け取り日
+                                <input
+                                    type="date"
+                                    id="adminDate"
+                                    onchange="fetchAdminOrders()"
+                                    class="px-2 py-1 bg-stone-50 border-2 border-stone-200 rounded-lg text-[11px] font-bold outline-none focus:border-appNavyAccent"
+                                >
+                            </label>
+                        </div>
+                        <div id="summaryContainer" class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                            <p class="text-xs text-stone-400 col-span-full font-medium">読み込み中...</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-appWarmBg border-2 border-stone-200 rounded-3xl p-4 shadow-md space-y-3">
+                        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+                            <h3 class="text-sm sm:text-base font-black text-stone-800">注文一覧</h3>
+                            <input
+                                type="text"
+                                id="orderSearchInput"
+                                onkeyup="filterOrders()"
+                                placeholder="生徒番号または商品名で検索"
+                                class="px-3 py-1.5 bg-stone-50 border-2 border-stone-200 rounded-xl text-xs font-bold w-full sm:w-56 outline-none focus:border-appNavyAccent focus:bg-white"
+                            >
+                        </div>
+
+                        <div class="overflow-x-auto rounded-2xl border border-stone-200">
+                            <table class="w-full text-left border-collapse text-xs min-w-[420px]">
+                                <thead>
+                                    <tr class="bg-stone-100 border-b border-stone-200 text-stone-600 font-bold text-[10px] tracking-wider uppercase">
+                                        <th class="py-2.5 px-2.5">生徒番号</th>
+                                        <th class="py-2.5 px-2.5">予約商品</th>
+                                        <th class="py-2.5 px-2.5 text-center">個数</th>
+                                        <th class="py-2.5 px-2.5">時間</th>
+                                        <th class="py-2.5 px-2.5 text-right">受渡状態</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminOrderTable" class="divide-y divide-stone-100 font-bold text-stone-800">
+                                    <tr>
+                                        <td colspan="5" class="py-6 text-center text-stone-400 font-normal">注文データを取得しています...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- サブタブ2: メニュー追加・価格・在庫管理 -->
+                <div id="adminProductsSection" class="hidden space-y-4 fade-in-up">
+                    <div class="bg-appWarmBg border-2 border-amber-200 rounded-3xl p-4 shadow-md space-y-3">
+                        <h3 class="text-sm font-black text-stone-800 flex items-center gap-1">
+                            <span>✨</span> 新規メニューの追加
+                        </h3>
+                        <form onsubmit="handleAddNewProduct(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <div>
+                                <label class="block text-[10px] font-black text-stone-600 mb-0.5" for="newProdName">商品名</label>
+                                <input type="text" id="newProdName" required placeholder="例: カツ丼" class="w-full px-2.5 py-1.5 bg-stone-50 border border-stone-300 rounded-xl text-xs font-bold outline-none focus:border-appWarmAmber">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black text-stone-600 mb-0.5" for="newProdPrice">価格 (円)</label>
+                                <input type="number" id="newProdPrice" required min="0" placeholder="例: 480" class="w-full px-2.5 py-1.5 bg-stone-50 border border-stone-300 rounded-xl text-xs font-bold outline-none focus:border-appWarmAmber">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black text-stone-600 mb-0.5" for="newProdStock">1日の在庫数</label>
+                                <input type="number" id="newProdStock" required min="0" placeholder="例: 20" class="w-full px-2.5 py-1.5 bg-stone-50 border border-stone-300 rounded-xl text-xs font-bold outline-none focus:border-appWarmAmber">
+                            </div>
+                            <div class="sm:col-span-3 pt-1">
+                                <button type="submit" class="w-full py-2 bg-appWarmAmber hover:bg-amber-600 text-white font-black text-xs rounded-xl shadow-xs transition-all cursor-pointer active:scale-95">
+                                    ＋ メニューを追加する
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="bg-appWarmBg border-2 border-stone-200 rounded-3xl p-4 shadow-md space-y-3">
+                        <h3 class="text-sm font-black text-stone-800">登録済みメニュー管理</h3>
+                        <div class="overflow-x-auto rounded-2xl border border-stone-200">
+                            <table class="w-full text-left border-collapse text-xs min-w-[450px]">
+                                <thead>
+                                    <tr class="bg-stone-100 border-b border-stone-200 text-stone-600 font-bold text-[10px] tracking-wider uppercase">
+                                        <th class="py-2.5 px-2.5">商品名</th>
+                                        <th class="py-2.5 px-2.5">価格</th>
+                                        <th class="py-2.5 px-2.5 text-center">予約数</th>
+                                        <th class="py-2.5 px-2.5">1日の在庫数</th>
+                                        <th class="py-2.5 px-2.5 text-right">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminProductsTable" class="divide-y divide-stone-100 font-bold text-stone-800">
+                                    <tr>
+                                        <td colspan="5" class="py-6 text-center text-stone-400 font-normal">読み込み中...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+    </div>
+
+    <!-- お弁当のバラン風 画面最下部グラフィック -->
+    <div class="balan-container">
+        <div class="balan-leaf"></div>
+    </div>
+
+    <script>
+        /* ============================================================
+           Supabase 接続設定
+           Supabase ダッシュボード > Project Settings > API で確認できます。
+           ※ anon キーは公開前提のキーです（権限は schema.sql の RLS / RPC で制限済み）。
+           ※ service_role キーは絶対にここへ書かないでください。
+           ============================================================ */
+        const SUPABASE_URL = 'https://dqkwrdnssmhjdngdoaxd.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_LfZgYmdtUfT1FDISrUvblw_gh_YlZzV';
+
+        const isConfigured = !SUPABASE_URL.includes('YOUR_PROJECT_REF') && !SUPABASE_ANON_KEY.includes('YOUR_SUPABASE');
+        const sb = isConfigured ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+        // RPC 呼び出しの共通ラッパー（失敗時は Error を投げる）
+        async function rpc(fnName, params) {
+            if (!sb) throw new Error('Supabaseの接続設定（SUPABASE_URL / SUPABASE_ANON_KEY）が未設定です。');
+            const { data, error } = await sb.rpc(fnName, params || {});
+            if (error) throw new Error(error.message);
+            return data;
+        }
+
+        /* ============================================================
+           状態
+           ============================================================ */
+        let productsData = [];          // 予約可能（在庫>0）な商品
+        let adminProducts = [];         // 管理画面の商品マスター
+        let currentAdminPassword = "";
+        let adminOrdersCache = [];
+        let isBeforeDeadlineGlobal = true;
+        let currentAudio = null;
+        let audioTimer = null;
+
+        // 完了音（外部URLの有効期限が切れている場合は鳴りません。差し替える場合はここを変更）
+        const SUCCESS_AUDIO_URL = "https://dova-worker.trackscid.workers.dev?filepath=bgm%2Faudio%2Fb4951657-c4c1-4f03-8d4e-2eb278877b71.mp3&expires=1791438046&token=8125da8ba0099078bda54451f998c204ba3ccd9932990c361c482dc596b790b0";
+
+        // ブタのセリフリスト（インタラクティブ表示用）
+        const pigDialogues = [
+            "ブヒッ！前日21時締め切り<br><span class='text-appAccentRed font-black'>早めの予約だブ！🐷</span>",
+            "生姜焼き食べたら<br><span class='text-appWarmAmber font-black'>共食いだブ！🍗</span>",
+            "タップしてくれて<br><span class='text-emerald-600 font-black'>ありがとうブ！🐽</span>",
+            "お腹がすいたら<br><span class='text-appAccentRed font-black'>大将軍弁当だブ！🍱</span>",
+            "豚をぶったら<br><span class='text-amber-800 font-black'>トンでった！</span>"
+        ];
+        let pigDialogueIndex = 0;
+
+        window.onload = function() {
+            loadProducts();
+        };
+
+        /* ============================================================
+           ユーティリティ
+           ============================================================ */
+        function escapeHtml(str) {
+            return String(str == null ? '' : str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        // 'YYYY-MM-DD' → '10/23(金)'
+        function formatDateJP(s) {
+            if (!s) return '';
+            const parts = String(s).split('-').map(Number);
+            const w = ['日', '月', '火', '水', '木', '金', '土'][new Date(parts[0], parts[1] - 1, parts[2]).getDay()];
+            return parts[1] + '/' + parts[2] + '(' + w + ')';
+        }
+
+        function errMsg(err) {
+            return (err && err.message) ? err.message : String(err);
+        }
+
+        /* ============================================================
+           ブタキャラクターのインタラクティブ・リアクション
+           ============================================================ */
+        function triggerPigReaction() {
+            const svgWrapper = document.getElementById('pigSvgWrapper');
+            const speech = document.getElementById('pigSpeech');
+
+            // 1. ビヨンビヨン弾むポップアニメーションクラスを一括適用
+            svgWrapper.classList.remove('pig-bounce-spring');
+            svgWrapper.classList.add('pig-tap-pop');
+
+            setTimeout(() => {
+                svgWrapper.classList.remove('pig-tap-pop');
+                svgWrapper.classList.add('pig-bounce-spring');
+            }, 400);
+
+            // 2. 吹き出しのセリフを変更
+            pigDialogueIndex = (pigDialogueIndex + 1) % pigDialogues.length;
+            speech.innerHTML = pigDialogues[pigDialogueIndex];
+
+            // 3. スマホの場合ハプティック（バイブレーション）フィードバック
+            if (navigator.vibrate) {
+                try { navigator.vibrate(30); } catch (e) {}
+            }
+
+            // 4. プチハート/スターのエフェクトを発生
+            createMiniSparkle();
+        }
+
+        function createMiniSparkle() {
+            const container = document.getElementById('interactivePigContainer');
+            const sparkle = document.createElement('span');
+            sparkle.textContent = ['✨', '💖', '🐷', '🌟'][Math.floor(Math.random() * 4)];
+            sparkle.style.position = 'absolute';
+            sparkle.style.top = '-10px';
+            sparkle.style.right = '20px';
+            sparkle.style.fontSize = '18px';
+            sparkle.style.pointerEvents = 'none';
+            sparkle.style.transition = 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
+            sparkle.style.opacity = '1';
+
+            container.appendChild(sparkle);
+
+            requestAnimationFrame(() => {
+                sparkle.style.transform = 'translateY(-30px) scale(1.3)';
+                sparkle.style.opacity = '0';
+            });
+
+            setTimeout(() => sparkle.remove(), 600);
+        }
+
+        /* ============================================================
+           予約完了時のワクワク紙吹雪 (Confetti) アニメーション
+           ============================================================ */
+        function triggerConfetti() {
+            const colors = ['#D9534F', '#E67E22', '#2ECC71', '#3498DB', '#F1C40F', '#9B59B6'];
+            const totalParticles = 40;
+
+            for (let i = 0; i < totalParticles; i++) {
+                const p = document.createElement('div');
+                p.className = 'confetti-particle';
+
+                const isCircle = Math.random() > 0.5;
+                const size = Math.floor(Math.random() * 8) + 6;
+                p.style.width = size + 'px';
+                p.style.height = size + 'px';
+                p.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                if (isCircle) p.style.borderRadius = '50%';
+
+                p.style.left = '50vw';
+                p.style.top = '30vh';
+
+                const angle = Math.random() * Math.PI * 2;
+                const distance = Math.random() * 220 + 80;
+                const dx = Math.cos(angle) * distance + 'px';
+                const dy = (Math.sin(angle) * distance + Math.random() * 100) + 'px';
+                const rot = (Math.random() * 720 - 360) + 'deg';
+
+                p.style.setProperty('--dx', dx);
+                p.style.setProperty('--dy', dy);
+                p.style.setProperty('--rot', rot);
+
+                document.body.appendChild(p);
+                setTimeout(() => p.remove(), 2800);
+            }
+        }
+
+        function playSuccessSound() {
+            try {
+                if (!SUCCESS_AUDIO_URL) return;
+                if (currentAudio) {
+                    currentAudio.pause();
+                    currentAudio.currentTime = 0;
+                }
+                if (audioTimer) clearTimeout(audioTimer);
+
+                currentAudio = new Audio(SUCCESS_AUDIO_URL);
+                currentAudio.play().catch(e => console.log('Audio error:', e));
+
+                audioTimer = setTimeout(() => {
+                    if (currentAudio) {
+                        currentAudio.pause();
+                        currentAudio.currentTime = 0;
+                    }
+                }, 15000);
+            } catch (e) {
+                console.log('Audio Error:', e);
+            }
+        }
+
+        /* ============================================================
+           タブ切り替え
+           ============================================================ */
+        function switchStudentTab(tab) {
+            const btnNew = document.getElementById('tabNewOrder');
+            const btnMy = document.getElementById('tabMyOrders');
+            const cardRes = document.getElementById('reservationCard');
+            const cardMy = document.getElementById('myOrdersCard');
+            const active = 'py-2.5 px-2 rounded-xl bg-appWarmAmber text-white shadow-xs transition-all duration-200 flex items-center justify-center gap-1 cursor-pointer active:scale-95';
+            const inactive = 'py-2.5 px-2 rounded-xl text-stone-600 hover:text-stone-900 transition-all duration-200 flex items-center justify-center gap-1 cursor-pointer active:scale-95';
+
+            // 完了チケット表示中にタブを切り替えたら閉じる
+            document.getElementById('completionCard').classList.add('hidden');
+
+            if (tab === 'new') {
+                btnNew.className = active;
+                btnMy.className = inactive;
+                cardRes.classList.remove('hidden');
+                cardMy.classList.add('hidden');
+            } else {
+                btnMy.className = active;
+                btnNew.className = inactive;
+                cardMy.classList.remove('hidden');
+                cardRes.classList.add('hidden');
+
+                const sId = document.getElementById('studentId').value;
+                if (sId && !document.getElementById('myStudentIdInput').value) {
+                    document.getElementById('myStudentIdInput').value = sId;
+                    searchMyOrders();
+                }
+            }
+        }
+
+        function switchAdminSubTab(tab) {
+            const btnOrders = document.getElementById('adminTabOrdersBtn');
+            const btnProducts = document.getElementById('adminTabProductsBtn');
+            const secOrders = document.getElementById('adminOrdersSection');
+            const secProducts = document.getElementById('adminProductsSection');
+            const active = 'py-2 px-2 rounded-xl bg-appNavyAccent text-white shadow-xs transition-all cursor-pointer';
+            const inactive = 'py-2 px-2 rounded-xl text-stone-600 hover:text-stone-900 transition-all cursor-pointer';
+
+            if (tab === 'orders') {
+                btnOrders.className = active;
+                btnProducts.className = inactive;
+                secOrders.classList.remove('hidden');
+                secProducts.classList.add('hidden');
+            } else {
+                btnProducts.className = active;
+                btnOrders.className = inactive;
+                secProducts.classList.remove('hidden');
+                secOrders.classList.add('hidden');
+            }
+        }
+
+        /* ============================================================
+           商品一覧・ランキング  (旧 getProducts)
+           ============================================================ */
+        async function loadProducts() {
+            const select = document.getElementById('productName');
+            select.innerHTML = '<option value="">読み込み中...</option>';
+
+            try {
+                const res = await rpc('get_products');
+                renderProductsAndRanking(res);
+            } catch (err) {
+                select.innerHTML = '<option value="">読み込みに失敗しました</option>';
+                showMessage('商品情報を取得できませんでした: ' + errMsg(err));
+            }
+        }
+
+        function renderProductsAndRanking(res) {
+            const all = (res && res.allProducts) || [];
+            productsData = all.filter(p => p.stock > 0);
+            isBeforeDeadlineGlobal = !!(res && res.isBeforeDeadline);
+
+            const closedBanner = document.getElementById('closedBanner');
+            if (!isBeforeDeadlineGlobal) {
+                closedBanner.classList.remove('hidden');
+            } else {
+                closedBanner.classList.add('hidden');
+            }
+
+            // 受け取り日の表示
+            const note = document.getElementById('targetDateNote');
+            if (res && res.targetDate) {
+                note.textContent = '📅 今回のご予約は ' + formatDateJP(res.targetDate) + ' の昼休みお渡し分です';
+                note.classList.remove('hidden');
+            }
+
+            // ランキング（予約数が多い順に上位3件）
+            const ranking = all
+                .filter(p => p.reserved > 0)
+                .sort((a, b) => b.reserved - a.reserved)
+                .slice(0, 3);
+            renderRanking(ranking);
+
+            const select = document.getElementById('productName');
+            select.innerHTML = '<option value="">メニューを選択してください</option>';
+
+            if (productsData.length === 0) {
+                select.innerHTML = '<option value="">予約可能なメニューがありません</option>';
+                select.disabled = true;
+                updatePricePreview();
+                return;
+            }
+
+            select.disabled = false;
+            productsData.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = String(p.id);
+                const isLowStock = p.stock <= 5;
+                const stockNotice = isLowStock ? ` 🔥残り${p.stock}個！` : ` (残り:${p.stock}個)`;
+                opt.textContent = `${p.name} — ¥${p.price.toLocaleString()}${stockNotice}`;
+                select.appendChild(opt);
+            });
+
+            updatePricePreview();
+        }
+
+        function renderRanking(ranking) {
+            const container = document.getElementById('rankingList');
+            const card = document.getElementById('rankingCard');
+
+            if (!ranking || ranking.length === 0) {
+                card.classList.add('hidden');
+                return;
+            }
+
+            card.classList.remove('hidden');
+            container.innerHTML = '';
+
+            const badges = ['🥇 1位', '🥈 2位', '🥉 3位'];
+            const badgeStyles = [
+                'bg-amber-100 text-amber-900 border-amber-300',
+                'bg-stone-200 text-stone-800 border-stone-300',
+                'bg-orange-100 text-orange-900 border-orange-200'
+            ];
+
+            ranking.forEach((item, index) => {
+                const el = document.createElement('div');
+                el.className = `p-1.5 rounded-xl border ${badgeStyles[index] || 'bg-stone-100 text-stone-700 border-stone-200'} flex flex-col items-center justify-between shadow-xs`;
+                el.innerHTML = `
+                    <span class="font-black text-[9px] uppercase px-1.5 py-0.5 rounded-full bg-white/90 mb-0.5">${badges[index]}</span>
+                    <span class="font-black text-[11px] text-stone-800 truncate w-full">${escapeHtml(item.name)}</span>
+                    <span class="text-[9px] font-bold text-stone-600 mt-0.5">${item.reserved}個予約</span>
+                `;
+                container.appendChild(el);
+            });
+        }
+
+        /* ============================================================
+           自分の予約の確認・変更・取消  (旧 getMyOrders / updateMyOrderQuantity / cancelMyOrder)
+           ============================================================ */
+        async function searchMyOrders(keepStatus) {
+            const studentId = document.getElementById('myStudentIdInput').value.trim();
+            const statusEl = document.getElementById('myOrdersStatus');
+            const resultEl = document.getElementById('myOrdersResult');
+
+            if (!studentId || studentId.length !== 4) {
+                showMyOrdersStatus('生徒番号は4桁で入力してください', true);
+                return;
+            }
+
+            if (keepStatus !== true) statusEl.classList.add('hidden');
+            resultEl.innerHTML = '<p class="text-xs text-stone-400 text-center py-6 font-bold">検索中...</p>';
+
+            try {
+                const res = await rpc('get_my_orders', { p_student_id: studentId });
+                renderMyOrdersResult(res, studentId);
+            } catch (err) {
+                resultEl.innerHTML = '';
+                showMyOrdersStatus('通信エラーが発生しました: ' + errMsg(err), true);
+            }
+        }
+
+        function renderMyOrdersResult(res, studentId) {
+            const resultEl = document.getElementById('myOrdersResult');
+            resultEl.innerHTML = '';
+
+            if (!res || !res.success) {
+                showMyOrdersStatus((res && res.message) || '検索に失敗しました', true);
+                return;
+            }
+
+            const orders = res.orders || [];
+            if (orders.length === 0) {
+                resultEl.innerHTML = '<p class="text-xs text-stone-400 text-center py-6 font-bold">予約はありません</p>';
+                return;
+            }
+
+            orders.forEach(ord => {
+                const card = document.createElement('div');
+                card.className = 'bg-stone-50 border border-stone-200 rounded-2xl p-3.5 space-y-2.5 font-bold shadow-xs';
+                const isEditable = !!ord.editable;
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="font-black text-xs sm:text-sm text-stone-800">${escapeHtml(ord.productName)}</div>
+                            <div class="text-[10px] text-stone-400 font-normal mt-0.5">受け取り日: ${escapeHtml(formatDateJP(ord.pickupDate))} ／ 予約時刻: ${escapeHtml(ord.time)}</div>
+                        </div>
+                        <span class="px-2.5 py-0.5 text-[10px] sm:text-xs font-black rounded-full ${ord.delivered ? 'bg-emerald-500 text-white' : 'bg-amber-100 text-appWarmAmber border border-amber-200'}">
+                            ${ord.delivered ? '✓ 受渡済' : '予約完了'}
+                        </span>
+                    </div>
+
+                    <div class="flex justify-between items-center text-xs pt-1.5 border-t border-stone-200">
+                        <div class="flex items-center space-x-1.5">
+                            <span class="text-stone-500">個数:</span>
+                            ${isEditable ? `
+                                <select data-role="qty" class="bg-white border border-stone-300 rounded-lg px-2 py-0.5 text-xs font-black text-stone-800 cursor-pointer">
+                                    ${[1,2,3,4,5].map(n => `<option value="${n}" ${n === ord.quantity ? 'selected' : ''}>${n} 個</option>`).join('')}
+                                </select>
+                            ` : `<span class="font-bold text-stone-800">${ord.quantity} 個</span>`}
+                        </div>
+                        <div class="text-right">
+                            <span class="text-stone-500">小計: </span>
+                            <span class="font-black text-appAccentRed text-sm sm:text-base">¥${ord.totalPrice.toLocaleString()}</span>
+                        </div>
+                    </div>
+
+                    ${isEditable ? `
+                        <div class="pt-1 flex justify-end">
+                            <button
+                                type="button"
+                                data-role="cancel"
+                                class="px-2.5 py-1 text-[11px] font-black text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-lg transition-colors border border-rose-200 cursor-pointer"
+                            >
+                                🗑️ 予約を取り消す
+                            </button>
+                        </div>
+                    ` : ''}
+                `;
+
+                // イベントは addEventListener で結び付ける（HTML文字列に値を埋め込まない）
+                const qtySel = card.querySelector('[data-role="qty"]');
+                if (qtySel) qtySel.addEventListener('change', () => updateMyOrderQty(studentId, ord.id, qtySel.value));
+                const cancelBtn = card.querySelector('[data-role="cancel"]');
+                if (cancelBtn) cancelBtn.addEventListener('click', () => cancelMyOrder(studentId, ord.id));
+
+                resultEl.appendChild(card);
+            });
+        }
+
+        async function updateMyOrderQty(studentId, orderId, newQty) {
+            try {
+                const res = await rpc('update_order_quantity', {
+                    p_student_id: studentId,
+                    p_order_id: orderId,
+                    p_quantity: parseInt(newQty, 10)
+                });
+                showMyOrdersStatus(res.message, !res.success);
+                await searchMyOrders(true);   // 失敗時もセレクトを元の値に戻すため再描画
+                loadProducts();
+            } catch (err) {
+                showMyOrdersStatus('通信エラーが発生しました: ' + errMsg(err), true);
+                await searchMyOrders(true);
+            }
+        }
+
+        async function cancelMyOrder(studentId, orderId) {
+            if (!confirm('この予約を取り消してもよろしいですか？')) return;
+
+            try {
+                const res = await rpc('cancel_order', {
+                    p_student_id: studentId,
+                    p_order_id: orderId
+                });
+                showMyOrdersStatus(res.message, !res.success);
+                await searchMyOrders(true);
+                loadProducts();
+            } catch (err) {
+                showMyOrdersStatus('通信エラーが発生しました: ' + errMsg(err), true);
+            }
+        }
+
+        function showMyOrdersStatus(msg, isError) {
+            const el = document.getElementById('myOrdersStatus');
+            el.textContent = msg;
+            el.className = `text-xs font-black p-3 rounded-xl border-2 ${isError ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-emerald-50 text-emerald-800 border-emerald-200'}`;
+            el.classList.remove('hidden');
+        }
+
+        /* ============================================================
+           管理者ビュー切り替え・ログイン
+           ============================================================ */
+        function toggleAdminView() {
+            const studentView = document.getElementById('studentView');
+            const adminView = document.getElementById('adminView');
+            const btn = document.getElementById('adminSwitchBtn');
+
+            if (adminView.classList.contains('hidden')) {
+                studentView.classList.add('hidden');
+                adminView.classList.remove('hidden');
+                btn.innerHTML = '<span>🏠</span> 生徒用メニュー';
+            } else {
+                adminView.classList.add('hidden');
+                studentView.classList.remove('hidden');
+                btn.innerHTML = '<span>⚙️</span> 管理者メニュー';
+            }
+        }
+
+        async function loginAdmin() {
+            const passInput = document.getElementById('adminPassInput');
+            const errEl = document.getElementById('adminAuthError');
+            const pass = passInput.value.trim();
+
+            if (!pass) {
+                errEl.textContent = 'パスワードを入力してください';
+                errEl.classList.remove('hidden');
+                return;
+            }
+            errEl.classList.add('hidden');
+
+            try {
+                const res = await rpc('admin_get_data', { p_password: pass, p_date: null });
+                if (res && res.success) {
+                    currentAdminPassword = pass;
+                    showDashboard(res);
+                } else {
+                    errEl.textContent = (res && res.message) || 'ログインに失敗しました';
+                    errEl.classList.remove('hidden');
+                }
+            } catch (err) {
+                errEl.textContent = '通信エラーが発生しました: ' + errMsg(err);
+                errEl.classList.remove('hidden');
+            }
+        }
+
+        function logoutAdmin() {
+            currentAdminPassword = "";
+            document.getElementById('adminDashboard').classList.add('hidden');
+            document.getElementById('adminLoginForm').classList.remove('hidden');
+            document.getElementById('adminPassInput').value = "";
+        }
+
+        function showDashboard(data) {
+            document.getElementById('adminLoginForm').classList.add('hidden');
+            document.getElementById('adminDashboard').classList.remove('hidden');
+            renderAdminData(data);
+        }
+
+        /* ============================================================
+           管理者データ取得・描画  (旧 getAdminData)
+           ============================================================ */
+        async function fetchAdminOrders() {
+            if (!currentAdminPassword) return;
+            const dateVal = document.getElementById('adminDate').value || null;
+
+            try {
+                const res = await rpc('admin_get_data', { p_password: currentAdminPassword, p_date: dateVal });
+                if (res && res.success) {
+                    renderAdminData(res);
+                } else {
+                    showAdminAlert((res && res.message) || 'データ取得に失敗しました', true);
+                }
+            } catch (err) {
+                showAdminAlert('通信エラーが発生しました: ' + errMsg(err), true);
+            }
+        }
+
+        function renderAdminData(data) {
+            if (!data || !data.success) return;
+
+            if (data.date) document.getElementById('adminDate').value = data.date;
+
+            adminOrdersCache = data.orders || [];
+            adminProducts = data.products || [];
+
+            renderSummary(recalculateSummaryFromOrders(adminOrdersCache));
+            filterOrders();
+            renderAdminProductsTable(adminProducts);
+        }
+
+        function recalculateSummaryFromOrders(orders) {
+            const summary = {};
+            orders.forEach(o => {
+                if (!summary[o.productName]) {
+                    summary[o.productName] = { total: 0, delivered: 0 };
+                }
+                summary[o.productName].total += o.quantity;
+                if (o.delivered) {
+                    summary[o.productName].delivered += o.quantity;
+                }
+            });
+            return summary;
+        }
+
+        function renderSummary(summary) {
+            const container = document.getElementById('summaryContainer');
+            container.innerHTML = '';
+
+            const keys = Object.keys(summary);
+            if (keys.length === 0) {
+                container.innerHTML = '<p class="text-xs text-stone-400 col-span-full font-medium">この日の注文はまだありません</p>';
+                return;
+            }
+
+            keys.forEach(key => {
+                const item = summary[key];
+                const card = document.createElement('div');
+                card.className = 'bg-stone-50 p-2.5 rounded-2xl border border-stone-200 shadow-xs';
+                card.innerHTML = `
+                    <div class="font-black text-[11px] text-stone-800 truncate">${escapeHtml(key)}</div>
+                    <div class="mt-0.5 flex justify-between items-baseline">
+                        <span class="text-[9px] text-stone-500 font-bold">受渡/予約</span>
+                        <span class="text-xs font-black ${item.delivered === item.total ? 'text-emerald-600' : 'text-appWarmAmber'}">
+                            ${item.delivered} / ${item.total}個
+                        </span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function renderTable(orders) {
+            const tbody = document.getElementById('adminOrderTable');
+            tbody.innerHTML = '';
+
+            if (!orders || orders.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-stone-400 font-medium">この日の注文データはありません</td></tr>';
+                return;
+            }
+
+            orders.forEach(ord => {
+                const tr = document.createElement('tr');
+                tr.className = ord.delivered ? 'bg-emerald-50/50' : 'hover:bg-stone-50';
+                tr.innerHTML = `
+                    <td class="py-2.5 px-2.5 font-black text-appWarmAmber">${escapeHtml(ord.studentId)}</td>
+                    <td class="py-2.5 px-2.5 font-bold text-stone-800">${escapeHtml(ord.productName)}</td>
+                    <td class="py-2.5 px-2.5 text-center font-black text-stone-700">${ord.quantity}</td>
+                    <td class="py-2.5 px-2.5 text-stone-400 text-[10px] font-normal">${escapeHtml(ord.time)}</td>
+                    <td class="py-2.5 px-2.5 text-right">
+                        <button
+                            type="button"
+                            data-role="toggle"
+                            class="px-2.5 py-1 text-xs font-black rounded-xl transition-all duration-150 cursor-pointer active:scale-95 ${
+                                ord.delivered
+                                    ? 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-xs'
+                                    : 'bg-stone-200 text-stone-700 hover:bg-stone-300'
+                            }"
+                        >
+                            ${ord.delivered ? '✓ 受渡済' : '未受渡'}
+                        </button>
+                    </td>
+                `;
+                tr.querySelector('[data-role="toggle"]').addEventListener('click', () => toggleDeliveryOptimistic(ord.id));
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 受渡ステータスの切り替え（先に画面を更新し、失敗したら元に戻す）
+        async function toggleDeliveryOptimistic(orderId) {
+            const targetOrder = adminOrdersCache.find(o => o.id === orderId);
+            if (!targetOrder) return;
+
+            const previousStatus = targetOrder.delivered;
+            const newStatus = !previousStatus;
+
+            targetOrder.delivered = newStatus;
+            filterOrders();
+            renderSummary(recalculateSummaryFromOrders(adminOrdersCache));
+
+            try {
+                const res = await rpc('admin_toggle_delivery', {
+                    p_password: currentAdminPassword,
+                    p_order_id: orderId,
+                    p_status: newStatus
+                });
+                if (!res || !res.success) throw new Error((res && res.message) || '更新に失敗しました');
+            } catch (err) {
+                targetOrder.delivered = previousStatus;
+                filterOrders();
+                renderSummary(recalculateSummaryFromOrders(adminOrdersCache));
+                showAdminAlert('受渡状態の更新に失敗したため、元の状態に戻しました。(' + errMsg(err) + ')', true);
+            }
+        }
+
+        /* ============================================================
+           メニュー管理  (旧 addNewProduct / updateProductDetails / deleteProductItem)
+           ============================================================ */
+        function renderAdminProductsTable(products) {
+            const tbody = document.getElementById('adminProductsTable');
+            tbody.innerHTML = '';
+
+            if (!products || products.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-stone-400 font-medium">登録された商品はありません</td></tr>';
+                return;
+            }
+
+            products.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-stone-50';
+                tr.innerHTML = `
+                    <td class="py-2.5 px-2.5 font-black text-stone-800">${escapeHtml(p.name)}</td>
+                    <td class="py-2.5 px-2.5">
+                        <input type="number" min="0" id="prodPrice_${p.id}" value="${p.price}" class="w-16 px-1.5 py-1 bg-white border border-stone-300 rounded-lg text-xs font-bold text-appAccentRed">
+                    </td>
+                    <td class="py-2.5 px-2.5 text-center font-black text-stone-600">${p.reserved} 個</td>
+                    <td class="py-2.5 px-2.5">
+                        <input type="number" min="0" id="prodStock_${p.id}" value="${p.stock}" class="w-16 px-1.5 py-1 bg-white border border-stone-300 rounded-lg text-xs font-bold text-stone-800">
+                    </td>
+                    <td class="py-2.5 px-2.5 text-right space-x-1">
+                        <button
+                            type="button"
+                            data-role="save"
+                            class="px-2 py-1 text-xs font-black text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-xs cursor-pointer active:scale-95"
+                        >
+                            保存
+                        </button>
+                        <button
+                            type="button"
+                            data-role="delete"
+                            class="px-1.5 py-1 text-xs font-black text-rose-600 hover:bg-rose-100 rounded-lg cursor-pointer"
+                        >
+                            削除
+                        </button>
+                    </td>
+                `;
+                tr.querySelector('[data-role="save"]').addEventListener('click', () => saveProductChange(p.id));
+                tr.querySelector('[data-role="delete"]').addEventListener('click', () => deleteProductItem(p.id));
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function handleAddNewProduct(e) {
+            e.preventDefault();
+            const name = document.getElementById('newProdName').value.trim();
+            const price = parseInt(document.getElementById('newProdPrice').value, 10);
+            const stock = parseInt(document.getElementById('newProdStock').value, 10);
+
+            if (!name || isNaN(price) || isNaN(stock)) return;
+
+            try {
+                const res = await rpc('admin_add_product', {
+                    p_password: currentAdminPassword,
+                    p_name: name,
+                    p_price: price,
+                    p_stock: stock
+                });
+                showAdminAlert(res.message, !res.success);
+                if (res.success) {
+                    document.getElementById('newProdName').value = '';
+                    document.getElementById('newProdPrice').value = '';
+                    document.getElementById('newProdStock').value = '';
+                    fetchAdminOrders();
+                    loadProducts();
+                }
+            } catch (err) {
+                showAdminAlert('通信エラーが発生しました: ' + errMsg(err), true);
+            }
+        }
+
+        async function saveProductChange(productId) {
+            const price = parseInt(document.getElementById(`prodPrice_${productId}`).value, 10);
+            const stock = parseInt(document.getElementById(`prodStock_${productId}`).value, 10);
+
+            if (isNaN(price) || isNaN(stock)) {
+                showAdminAlert('価格と在庫数には正しい数値を入力してください。', true);
+                return;
+            }
+
+            try {
+                const res = await rpc('admin_update_product', {
+                    p_password: currentAdminPassword,
+                    p_product_id: productId,
+                    p_price: price,
+                    p_stock: stock
+                });
+                showAdminAlert(res.message, !res.success);
+                if (res.success) {
+                    fetchAdminOrders();
+                    loadProducts();
+                }
+            } catch (err) {
+                showAdminAlert('通信エラーが発生しました: ' + errMsg(err), true);
+            }
+        }
+
+        async function deleteProductItem(productId) {
+            const prod = adminProducts.find(p => p.id === productId);
+            const prodName = prod ? prod.name : '';
+            if (!confirm(`「${prodName}」を削除してもよろしいですか？`)) return;
+
+            try {
+                const res = await rpc('admin_delete_product', {
+                    p_password: currentAdminPassword,
+                    p_product_id: productId
+                });
+                showAdminAlert(res.message, !res.success);
+                if (res.success) {
+                    fetchAdminOrders();
+                    loadProducts();
+                }
+            } catch (err) {
+                showAdminAlert('通信エラーが発生しました: ' + errMsg(err), true);
+            }
+        }
+
+        function showAdminAlert(msg, isError) {
+            const el = document.getElementById('adminStatusAlert');
+            el.textContent = msg;
+            el.className = `p-3 rounded-2xl text-xs font-black border-2 fade-in-up ${
+                isError ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-emerald-50 text-emerald-800 border-emerald-200'
+            }`;
+            el.classList.remove('hidden');
+            setTimeout(() => el.classList.add('hidden'), 4000);
+        }
+
+        function filterOrders() {
+            const query = document.getElementById('orderSearchInput').value.toLowerCase().trim();
+            if (!query) {
+                renderTable(adminOrdersCache);
+                return;
+            }
+            const filtered = adminOrdersCache.filter(o =>
+                o.studentId.includes(query) || o.productName.toLowerCase().includes(query)
+            );
+            renderTable(filtered);
+        }
+
+        /* ============================================================
+           予約フォーム  (旧 submitOrder)
+           ============================================================ */
+        function updatePricePreview() {
+            const select = document.getElementById('productName');
+            const qtyInput = document.getElementById('quantity');
+            const previewEl = document.getElementById('pricePreview');
+
+            const selectedId = Number(select.value);
+            const qty = parseInt(qtyInput.value, 10) || 0;
+
+            const prod = productsData.find(p => p.id === selectedId);
+
+            if (prod && qty > 0) {
+                const total = prod.price * qty;
+                previewEl.textContent = '¥' + total.toLocaleString();
+                // 変更時にポップなバウンドモーション
+                previewEl.style.transform = 'scale(1.2)';
+                setTimeout(() => previewEl.style.transform = 'scale(1)', 150);
+            } else {
+                previewEl.textContent = '¥0';
+            }
+        }
+
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+
+            const studentId = document.getElementById('studentId').value.trim();
+            const productId = Number(document.getElementById('productName').value);
+            const quantity = parseInt(document.getElementById('quantity').value, 10);
+
+            if (!studentId || studentId.length !== 4) {
+                showMessage('生徒番号は4桁の数字で入力してください (例: 1101)');
+                return;
+            }
+            if (!productId) {
+                showMessage('メニューを選択してください');
+                return;
+            }
+            if (isNaN(quantity) || quantity < 1 || quantity > 5) {
+                showMessage('個数は1〜5の範囲で入力してください');
+                return;
+            }
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.textContent = '予約送信中...';
+            hideMessage();
+
+            try {
+                const res = await rpc('place_order', {
+                    p_student_id: studentId,
+                    p_product_id: productId,
+                    p_quantity: quantity
+                });
+                onSuccess(res);
+            } catch (err) {
+                handleError(err);
+            }
+        }
+
+        function onSuccess(response) {
+            const btn = document.getElementById('submitBtn');
+            btn.innerHTML = '<span>👍</span> この内容で予約を確定する！';
+
+            if (response.success) {
+                playSuccessSound();
+                triggerConfetti();   // 予約完了のワクワク紙吹雪エフェクト
+                showCompletionTicket(response.orderDetails);
+                document.getElementById('reservationForm').reset();
+                loadProducts();
+            } else {
+                showMessage(response.message);
+                btn.disabled = false;
+                loadProducts();      // 在庫切れ等の場合に最新の残数へ更新
+            }
+        }
+
+        function handleError(error) {
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = false;
+            btn.innerHTML = '<span>👍</span> この内容で予約を確定する！';
+            showMessage('通信エラーが発生しました: ' + errMsg(error));
+        }
+
+        function showCompletionTicket(details) {
+            if (!details) return;
+
+            document.getElementById('resStudentId').textContent = details.studentId;
+            document.getElementById('noticeStudentId').textContent = details.studentId;
+            document.getElementById('resPickupDate').textContent = formatDateJP(details.pickupDate);
+            document.getElementById('resProductName').textContent = details.productName;
+            document.getElementById('resQuantity').textContent = details.quantity + ' 個';
+
+            const formattedTotal = details.totalPrice ? '¥' + Number(details.totalPrice).toLocaleString() : '¥0';
+            document.getElementById('resTotalPrice').textContent = formattedTotal;
+            document.getElementById('resTime').textContent = details.time;
+
+            document.getElementById('reservationCard').classList.add('hidden');
+            hideMessage();
+            document.getElementById('completionCard').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function resetToNewReservation() {
+            document.getElementById('completionCard').classList.add('hidden');
+            document.getElementById('reservationCard').classList.remove('hidden');
+            document.getElementById('submitBtn').disabled = false;
+            updatePricePreview();
+        }
+
+        function showMessage(msg) {
+            const el = document.getElementById('statusMessage');
+            el.textContent = msg;
+            el.className = 'p-3 rounded-2xl text-xs sm:text-sm font-black bg-rose-50 text-rose-700 border-2 border-rose-200';
+            el.classList.remove('hidden');
+        }
+
+        function hideMessage() {
+            const el = document.getElementById('statusMessage');
+            el.classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
