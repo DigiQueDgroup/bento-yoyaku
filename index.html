@@ -1155,20 +1155,23 @@
            管理者ビュー切り替え・ログイン
            ============================================================ */
         function toggleAdminView() {
-            const studentView = document.getElementById('studentView');
-            const adminView = document.getElementById('adminView');
-            const btn = document.getElementById('adminSwitchBtn');
+    const studentView = document.getElementById('studentView');
+    const adminView = document.getElementById('adminView');
+    const btn = document.getElementById('adminSwitchBtn');
+    const pigContainer = document.getElementById('interactivePigContainer'); // ブタのコンテナを取得
 
-            if (adminView.classList.contains('hidden')) {
-                studentView.classList.add('hidden');
-                adminView.classList.remove('hidden');
-                btn.innerHTML = '<span>🏠</span> 生徒用メニュー';
-            } else {
-                adminView.classList.add('hidden');
-                studentView.classList.remove('hidden');
-                btn.innerHTML = '<span>⚙️</span> 管理者メニュー';
-            }
-        }
+    if (adminView.classList.contains('hidden')) {
+        studentView.classList.add('hidden');
+        adminView.classList.remove('hidden');
+        if (pigContainer) pigContainer.classList.add('hidden'); // 管理者画面ではブタを消す
+        btn.innerHTML = '<span>🏠</span> 生徒用メニュー';
+    } else {
+        adminView.classList.add('hidden');
+        studentView.classList.remove('hidden');
+        if (pigContainer) pigContainer.classList.remove('hidden'); // 生徒画面に戻ったらブタを再表示する
+        btn.innerHTML = '<span>⚙️</span> 管理者メニュー';
+    }
+}
 
         async function loginAdmin() {
             const passInput = document.getElementById('adminPassInput');
