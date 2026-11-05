@@ -4,6 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>大将軍弁当予約システム</title>
+    <!-- PWA（ホーム画面に追加できるアプリ化） -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#F9EBE0">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="大将軍弁当">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="icon" type="image/png" href="icon-192.png">
+    <!-- ダークモード：画面のちらつき防止のため最初に適用 -->
+    <script>
+        (function () {
+            try {
+                var t = localStorage.getItem('bentoTheme');
+                if (!t) t = (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+                if (t === 'dark') document.documentElement.classList.add('dark');
+            } catch (e) {}
+        })();
+    </script>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Supabase JS クライアント -->
@@ -219,6 +238,105 @@
             #printArea .page-break { page-break-before: always; }
             #printArea .total-row td { font-weight: 900; background: #f5f5f5; }
         }
+
+        /* ==================== 共通：丸いアイコンボタン ==================== */
+        .icon-btn {
+            width: 2.25rem; height: 2.25rem; border-radius: 9999px;
+            background: rgba(255,255,255,0.85); border: 2px solid #ffffff;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; line-height: 1; cursor: pointer;
+            transition: transform 0.15s;
+        }
+        .icon-btn:active { transform: scale(0.9); }
+
+        /* ==================== ダークモード ==================== */
+        html.dark { color-scheme: dark; }
+        html.dark body {
+            background: linear-gradient(180deg, #1c1714 0%, #231c17 50%, #2b221b 100%);
+            color: #f1e6dc;
+        }
+        html.dark .pop-title {
+            color: #ff8a7a;
+            -webkit-text-stroke: 2px #1c1714;
+            filter: drop-shadow(0px 3px 8px rgba(0,0,0,0.5));
+        }
+        html.dark .icon-btn { background: rgba(60,50,45,0.9); border-color: #4a403a; }
+
+        /* 背景色 */
+        html.dark .bg-appWarmBg { background-color: #2a2420 !important; }
+        html.dark .bg-white { background-color: #2f2926 !important; }
+        html.dark .bg-white\/90 { background-color: rgba(47,41,38,0.9) !important; }
+        html.dark .focus\:bg-white:focus { background-color: #2f2926 !important; }
+        html.dark .bg-stone-50 { background-color: #332c28 !important; }
+        html.dark .bg-stone-100 { background-color: #3a322d !important; }
+        html.dark .bg-stone-200 { background-color: #4a403a !important; }
+        html.dark .bg-stone-200\/80 { background-color: rgba(74,64,58,0.8) !important; }
+        html.dark .bg-stone-800 { background-color: #5a4a40 !important; }
+        html.dark .hover\:bg-stone-900:hover { background-color: #6a5849 !important; }
+        html.dark .hover\:bg-stone-50:hover { background-color: #3a322d !important; }
+        html.dark .hover\:bg-stone-200:hover { background-color: #554a43 !important; }
+        html.dark .hover\:bg-stone-300:hover { background-color: #5f534b !important; }
+        html.dark .bg-amber-50,
+        html.dark .bg-amber-50\/80 { background-color: #3b2e1a !important; }
+        html.dark .bg-amber-100,
+        html.dark .bg-amber-100\/90 { background-color: #4d3919 !important; }
+        html.dark .bg-orange-100 { background-color: #4f301b !important; }
+        html.dark .bg-emerald-50 { background-color: #12342b !important; }
+        html.dark .bg-emerald-50\/50 { background-color: rgba(16,185,129,0.12) !important; }
+        html.dark .bg-rose-50 { background-color: #3d1f25 !important; }
+        html.dark .hover\:bg-rose-100:hover { background-color: #52272f !important; }
+        html.dark .from-amber-50 {
+            --tw-gradient-from: #3b2e1a var(--tw-gradient-from-position) !important;
+            --tw-gradient-to: rgb(59 46 26 / 0) var(--tw-gradient-to-position) !important;
+            --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+        }
+        html.dark .from-stone-50 {
+            --tw-gradient-from: #332c28 var(--tw-gradient-from-position) !important;
+            --tw-gradient-to: rgb(51 44 40 / 0) var(--tw-gradient-to-position) !important;
+            --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+        }
+        html.dark .to-orange-50 { --tw-gradient-to: #402b19 var(--tw-gradient-to-position) !important; }
+        html.dark .to-amber-50\/50 { --tw-gradient-to: rgb(59 46 26 / 0.5) var(--tw-gradient-to-position) !important; }
+
+        /* 文字色 */
+        html.dark .text-stone-900,
+        html.dark .text-stone-800 { color: #f5efe9 !important; }
+        html.dark .text-stone-700 { color: #e7ddd3 !important; }
+        html.dark .text-stone-600 { color: #d3c7bc !important; }
+        html.dark .text-stone-500 { color: #b3a69a !important; }
+        html.dark .text-stone-400 { color: #9a8d82 !important; }
+        html.dark .hover\:text-stone-900:hover { color: #ffffff !important; }
+        html.dark .text-amber-900 { color: #fde3a7 !important; }
+        html.dark .text-amber-800 { color: #f8cf7a !important; }
+        html.dark .text-orange-900 { color: #fdba74 !important; }
+        html.dark .text-appAccentRed { color: #ff7b72 !important; }
+        html.dark .text-rose-700,
+        html.dark .text-rose-600 { color: #fda4af !important; }
+        html.dark .hover\:text-rose-700:hover { color: #fecdd3 !important; }
+        html.dark .text-emerald-800,
+        html.dark .text-emerald-600 { color: #6ee7b7 !important; }
+        html.dark ::placeholder { color: #8a7d72 !important; }
+
+        /* 枠線 */
+        html.dark .border-stone-100,
+        html.dark .border-stone-200 { border-color: #4a403a !important; }
+        html.dark .border-stone-300 { border-color: #5a4e46 !important; }
+        html.dark .border-orange-100 { border-color: #4a3827 !important; }
+        html.dark .border-orange-200 { border-color: #7a4a25 !important; }
+        html.dark .border-amber-200,
+        html.dark .border-amber-300,
+        html.dark .border-amber-300\/80 { border-color: #6b4d22 !important; }
+        html.dark .border-rose-200 { border-color: #7f2a3a !important; }
+        html.dark .border-emerald-200 { border-color: #1f6b4f !important; }
+        html.dark .divide-stone-100 > :not([hidden]) ~ :not([hidden]) { border-color: #3f3631 !important; }
+
+        /* ブタの吹き出し・表の見出し */
+        html.dark .pig-speech-bubble { background: #2f2926; border-color: #6b4350; }
+        html.dark .pig-speech-bubble::after { border-top-color: #2f2926; }
+        html.dark .pig-speech-bubble::before { border-top-color: #6b4350; }
+        html.dark th[data-sort]:hover { background: #4a403a; }
+        html.dark .balan-leaf { filter: brightness(0.8) drop-shadow(0px -3px 4px rgba(0,0,0,0.4)); }
     </style>
 </head>
 <body class="px-3 sm:px-4 py-4 md:py-6 flex flex-col items-center">
@@ -280,7 +398,12 @@
 
         <!-- ヘッダーエリア -->
         <header class="relative text-center pt-1 pb-1">
-            <div class="flex justify-end mb-2">
+            <div class="flex justify-between items-center mb-2 gap-2">
+                <div class="flex items-center gap-1.5">
+                    <button type="button" id="soundToggleBtn" class="icon-btn" onclick="toggleSound()" aria-label="効果音のオン/オフ" title="効果音のオン/オフ">🔊</button>
+                    <button type="button" id="themeToggleBtn" class="icon-btn" onclick="toggleTheme()" aria-label="ダークモードの切り替え" title="ダークモードの切り替え">🌙</button>
+                    <button type="button" id="installBtn" class="hidden px-3 h-9 text-[11px] font-black text-amber-900 bg-amber-100 border-2 border-amber-300 rounded-full shadow-md cursor-pointer active:scale-95 whitespace-nowrap" onclick="installApp()">📲 アプリにする</button>
+                </div>
                 <button
                     type="button"
                     onclick="toggleAdminView()"
@@ -308,6 +431,12 @@
             </div>
             <div class="mt-1.5 text-[11px] font-black text-stone-600">
                 🗑️ キャンセルのみ <span class="text-appAccentRed">当日 朝9:30</span> まで可能
+            </div>
+
+            <div id="iosInstallTip" class="hidden mt-2 text-left text-[11px] font-black text-amber-900 bg-amber-50 border border-amber-200 rounded-2xl px-3 py-2 leading-relaxed relative pr-8">
+                📲 <strong>ホーム画面に追加できます</strong><br>
+                Safariの共有ボタン（□に↑）→「ホーム画面に追加」を選ぶと、アプリのように使えます。
+                <button type="button" onclick="dismissIosTip()" class="absolute top-1.5 right-2 text-stone-500 text-sm font-black cursor-pointer" aria-label="閉じる">✕</button>
             </div>
         </header>
 
@@ -418,6 +547,7 @@
                         <button
                             type="submit"
                             id="submitBtn"
+                            data-sfx="none"
                             class="btn-shine-effect w-full py-3.5 px-5 bg-gradient-to-r from-appWarmAmber to-amber-600 hover:from-amber-600 hover:to-appWarmAmber active:scale-[0.98] text-white font-black rounded-2xl text-base sm:text-lg tracking-wide transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer border-2 border-white/60 flex items-center justify-center gap-2"
                         >
                             <span>👍</span> この内容で予約を確定する！
@@ -803,11 +933,7 @@
         let isBeforeDeadlineGlobal = true;
         let reservationOpenGlobal = true;   // 現在、予約受付中か（13:00〜21:00）
         let adminSort = { key: 'time', dir: 'asc' };
-        let currentAudio = null;
-        let audioTimer = null;
 
-        // 完了音（外部URLの有効期限が切れている場合は鳴りません。差し替える場合はここを変更）
-        const SUCCESS_AUDIO_URL = "https://dova-worker.trackscid.workers.dev?filepath=bgm%2Faudio%2Fb4951657-c4c1-4f03-8d4e-2eb278877b71.mp3&expires=1791438046&token=8125da8ba0099078bda54451f998c204ba3ccd9932990c361c482dc596b790b0";
 
         // ブタのセリフリスト（インタラクティブ表示用）
         const pigDialogues = [
@@ -820,7 +946,171 @@
         ];
         let pigDialogueIndex = 0;
 
+        /* ============================================================
+           効果音（Web Audio API で生成：音声ファイル不要）
+           ============================================================ */
+        const SFX = (function () {
+            let ctx = null;
+            let muted = false;
+            try { muted = localStorage.getItem('bentoMuted') === '1'; } catch (e) {}
+
+            function ensure() {
+                if (!ctx) {
+                    const AC = window.AudioContext || window.webkitAudioContext;
+                    if (!AC) return null;
+                    try { ctx = new AC(); } catch (e) { return null; }
+                }
+                if (ctx.state === 'suspended') { try { ctx.resume(); } catch (e) {} }
+                return ctx;
+            }
+
+            // 1音を鳴らす（start: 秒後, freq→end へ滑らかに変化）
+            function tone(o) {
+                const c = ensure();
+                if (!c) return;
+                const t0 = c.currentTime + (o.start || 0);
+                const dur = o.dur || 0.12;
+                const osc = c.createOscillator();
+                const gain = c.createGain();
+                osc.type = o.type || 'sine';
+                osc.frequency.setValueAtTime(o.freq, t0);
+                if (o.end) osc.frequency.exponentialRampToValueAtTime(o.end, t0 + dur);
+                const vol = o.vol == null ? 0.15 : o.vol;
+                gain.gain.setValueAtTime(0.0001, t0);
+                gain.gain.exponentialRampToValueAtTime(vol, t0 + 0.008);
+                gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+                osc.connect(gain);
+                gain.connect(c.destination);
+                osc.start(t0);
+                osc.stop(t0 + dur + 0.03);
+            }
+
+            const sounds = {
+                click:   () => tone({ freq: 760, end: 560, type: 'triangle', dur: 0.06, vol: 0.12 }),
+                tick:    () => tone({ freq: 420, type: 'sine', dur: 0.05, vol: 0.1 }),
+                select:  () => tone({ freq: 520, end: 640, type: 'sine', dur: 0.07, vol: 0.12 }),
+                tab:     () => { tone({ freq: 600, type: 'triangle', dur: 0.06, vol: 0.12 }); tone({ freq: 820, type: 'triangle', start: 0.06, dur: 0.08, vol: 0.12 }); },
+                ding:    () => { tone({ freq: 1175, type: 'sine', dur: 0.14, vol: 0.14 }); tone({ freq: 1568, type: 'sine', start: 0.09, dur: 0.22, vol: 0.12 }); },
+                cancel:  () => { tone({ freq: 520, end: 330, type: 'triangle', dur: 0.14, vol: 0.14 }); tone({ freq: 330, end: 220, type: 'triangle', start: 0.12, dur: 0.18, vol: 0.12 }); },
+                error:   () => { tone({ freq: 230, end: 170, type: 'sawtooth', dur: 0.16, vol: 0.09 }); tone({ freq: 220, end: 150, type: 'sawtooth', start: 0.18, dur: 0.22, vol: 0.09 }); },
+                oink:    () => { tone({ freq: 330, end: 190, type: 'sawtooth', dur: 0.12, vol: 0.09 }); tone({ freq: 300, end: 210, type: 'sawtooth', start: 0.14, dur: 0.1, vol: 0.08 }); },
+                success: () => {
+                    const notes = [523.25, 659.25, 783.99, 1046.5];
+                    notes.forEach((f, i) => tone({ freq: f, type: 'triangle', start: i * 0.1, dur: 0.18, vol: 0.15 }));
+                    [523.25, 659.25, 783.99, 1046.5].forEach(f => tone({ freq: f, type: 'sine', start: 0.46, dur: 0.55, vol: 0.09 }));
+                }
+            };
+
+            return {
+                play(name) {
+                    if (muted || !sounds[name]) return;
+                    try { sounds[name](); } catch (e) {}
+                },
+                isMuted() { return muted; },
+                setMuted(v) {
+                    muted = !!v;
+                    try { localStorage.setItem('bentoMuted', muted ? '1' : '0'); } catch (e) {}
+                },
+                unlock() { ensure(); }
+            };
+        })();
+
+        function updateSoundButton() {
+            const b = document.getElementById('soundToggleBtn');
+            if (b) b.textContent = SFX.isMuted() ? '🔇' : '🔊';
+        }
+
+        function toggleSound() {
+            SFX.setMuted(!SFX.isMuted());
+            updateSoundButton();
+            SFX.play('ding');   // ミュート解除時だけ鳴る
+        }
+
+        // ボタンを押したときの共通クリック音
+        const SFX_BY_ID = { tabNewOrder: 'tab', tabMyOrders: 'tab', adminTabOrdersBtn: 'tab', adminTabProductsBtn: 'tab' };
+        document.addEventListener('click', function (e) {
+            const el = e.target.closest('button, th[data-sort]');
+            if (!el || el.disabled) return;
+            if (el.dataset.sfx === 'none' || el.dataset.role) return;   // 専用の音を鳴らすボタン
+            SFX.play(SFX_BY_ID[el.id] || 'click');
+        });
+        document.addEventListener('change', function (e) {
+            if (e.target && e.target.tagName === 'SELECT') SFX.play('select');
+        });
+
+        /* ============================================================
+           ダークモード
+           ============================================================ */
+        function currentTheme() {
+            return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+        }
+
+        function applyTheme(t) {
+            document.documentElement.classList.toggle('dark', t === 'dark');
+            const b = document.getElementById('themeToggleBtn');
+            if (b) b.textContent = (t === 'dark') ? '☀️' : '🌙';
+            const meta = document.querySelector('meta[name="theme-color"]');
+            if (meta) meta.setAttribute('content', t === 'dark' ? '#1c1714' : '#F9EBE0');
+        }
+
+        function toggleTheme() {
+            const next = currentTheme() === 'dark' ? 'light' : 'dark';
+            applyTheme(next);
+            try { localStorage.setItem('bentoTheme', next); } catch (e) {}
+        }
+
+        /* ============================================================
+           PWA（ホーム画面に追加）
+           ============================================================ */
+        let deferredInstallPrompt = null;
+
+        function isStandalone() {
+            return (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+        }
+
+        window.addEventListener('beforeinstallprompt', function (e) {
+            e.preventDefault();
+            deferredInstallPrompt = e;
+            if (!isStandalone()) document.getElementById('installBtn').classList.remove('hidden');
+        });
+
+        window.addEventListener('appinstalled', function () {
+            deferredInstallPrompt = null;
+            document.getElementById('installBtn').classList.add('hidden');
+        });
+
+        async function installApp() {
+            if (!deferredInstallPrompt) return;
+            deferredInstallPrompt.prompt();
+            try { await deferredInstallPrompt.userChoice; } catch (e) {}
+            deferredInstallPrompt = null;
+            document.getElementById('installBtn').classList.add('hidden');
+        }
+
+        function dismissIosTip() {
+            document.getElementById('iosInstallTip').classList.add('hidden');
+            try { localStorage.setItem('bentoIosTipClosed', '1'); } catch (e) {}
+        }
+
+        function initPwa() {
+            // iPhone / iPad の Safari には自動の「追加」ボタンが無いので、案内を表示
+            const ua = navigator.userAgent || '';
+            const isIOS = /iphone|ipad|ipod/i.test(ua) || (/Macintosh/i.test(ua) && navigator.maxTouchPoints > 1);
+            let closed = false;
+            try { closed = localStorage.getItem('bentoIosTipClosed') === '1'; } catch (e) {}
+            if (isIOS && !isStandalone() && !closed) {
+                document.getElementById('iosInstallTip').classList.remove('hidden');
+            }
+
+            if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+                navigator.serviceWorker.register('sw.js').catch(function (err) { console.log('SW error:', err); });
+            }
+        }
+
         window.onload = function() {
+            applyTheme(currentTheme());
+            updateSoundButton();
+            initPwa();
             loadProducts();
             updateSortIndicators();
         };
@@ -886,6 +1176,8 @@
         function triggerPigReaction() {
             const svgWrapper = document.getElementById('pigSvgWrapper');
             const speech = document.getElementById('pigSpeech');
+
+            SFX.play('oink');
 
             // 1. ビヨンビヨン弾むポップアニメーションクラスを一括適用
             svgWrapper.classList.remove('pig-bounce-spring');
@@ -968,26 +1260,7 @@
         }
 
         function playSuccessSound() {
-            try {
-                if (!SUCCESS_AUDIO_URL) return;
-                if (currentAudio) {
-                    currentAudio.pause();
-                    currentAudio.currentTime = 0;
-                }
-                if (audioTimer) clearTimeout(audioTimer);
-
-                currentAudio = new Audio(SUCCESS_AUDIO_URL);
-                currentAudio.play().catch(e => console.log('Audio error:', e));
-
-                audioTimer = setTimeout(() => {
-                    if (currentAudio) {
-                        currentAudio.pause();
-                        currentAudio.currentTime = 0;
-                    }
-                }, 15000);
-            } catch (e) {
-                console.log('Audio Error:', e);
-            }
+            SFX.play('success');
         }
 
         /* ============================================================
@@ -1300,7 +1573,7 @@
                     p_student_id: studentId,
                     p_order_id: orderId
                 });
-                showMyOrdersStatus(res.message, !res.success);
+                showMyOrdersStatus(res.message, !res.success, res.success ? 'cancel' : null);
                 await searchMyOrders(true);
                 loadProducts();
             } catch (err) {
@@ -1308,7 +1581,8 @@
             }
         }
 
-        function showMyOrdersStatus(msg, isError) {
+        function showMyOrdersStatus(msg, isError, sound) {
+            SFX.play(sound || (isError ? 'error' : 'ding'));
             const el = document.getElementById('myOrdersStatus');
             el.textContent = msg;
             el.className = `text-xs font-black p-3 rounded-xl border-2 ${isError ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-emerald-50 text-emerald-800 border-emerald-200'}`;
@@ -1345,6 +1619,7 @@
             if (!pass) {
                 errEl.textContent = 'パスワードを入力してください';
                 errEl.classList.remove('hidden');
+                SFX.play('error');
                 return;
             }
             errEl.classList.add('hidden');
@@ -1357,10 +1632,12 @@
                 } else {
                     errEl.textContent = (res && res.message) || 'ログインに失敗しました';
                     errEl.classList.remove('hidden');
+                SFX.play('error');
                 }
             } catch (err) {
                 errEl.textContent = '通信エラーが発生しました: ' + errMsg(err);
                 errEl.classList.remove('hidden');
+                SFX.play('error');
             }
         }
 
@@ -1372,6 +1649,7 @@
         }
 
         function showDashboard(data) {
+            SFX.play('ding');
             document.getElementById('adminLoginForm').classList.add('hidden');
             document.getElementById('adminDashboard').classList.remove('hidden');
             renderAdminData(data);
@@ -1495,6 +1773,7 @@
             const newStatus = !previousStatus;
 
             targetOrder.delivered = newStatus;
+            SFX.play(newStatus ? 'ding' : 'tick');
             filterOrders();
             renderSummary(recalculateSummaryFromOrders(adminOrdersCache));
 
@@ -1808,7 +2087,7 @@
                     p_password: currentAdminPassword,
                     p_product_id: productId
                 });
-                showAdminAlert(res.message, !res.success);
+                showAdminAlert(res.message, !res.success, res.success ? 'cancel' : null);
                 if (res.success) {
                     fetchAdminOrders();
                     loadProducts();
@@ -1818,7 +2097,8 @@
             }
         }
 
-        function showAdminAlert(msg, isError) {
+        function showAdminAlert(msg, isError, sound) {
+            SFX.play(sound || (isError ? 'error' : 'ding'));
             const el = document.getElementById('adminStatusAlert');
             el.textContent = msg;
             el.className = `p-3 rounded-2xl text-xs font-black border-2 fade-in-up ${
@@ -1945,6 +2225,7 @@
         }
 
         function showMessage(msg) {
+            SFX.play('error');
             const el = document.getElementById('statusMessage');
             el.textContent = msg;
             el.className = 'p-3 rounded-2xl text-xs sm:text-sm font-black bg-rose-50 text-rose-700 border-2 border-rose-200';
