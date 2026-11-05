@@ -177,6 +177,48 @@
             0% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(1); }
             100% { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(0.6); }
         }
+
+        /* 並び替え可能な見出し */
+        th[data-sort] { cursor: pointer; user-select: none; white-space: nowrap; }
+        th[data-sort]:hover { background: #e7e5e4; }
+        .sort-ind { color: #D9534F; margin-left: 2px; }
+
+        /* ==================== 印刷用 ==================== */
+        #printArea { display: none; }
+        @media print {
+            @page { size: A4; margin: 12mm; }
+            body > *:not(#printArea) { display: none !important; }
+            body {
+                background: #ffffff !important;
+                color: #000000 !important;
+                padding: 0 !important;
+                min-height: 0 !important;
+            }
+            #printArea {
+                display: block !important;
+                font-family: 'Noto Sans JP', sans-serif;
+                font-size: 11pt;
+                color: #000;
+            }
+            #printArea h1 { font-size: 16pt; font-weight: 900; margin: 0 0 2mm; }
+            #printArea h2 {
+                font-size: 12.5pt; font-weight: 900; margin: 6mm 0 2mm;
+                padding-bottom: 1mm; border-bottom: 2px solid #000;
+            }
+            #printArea h3 { font-size: 11.5pt; font-weight: 900; margin: 4mm 0 1.5mm; }
+            #printArea .meta { font-size: 9.5pt; color: #333; margin-bottom: 2mm; }
+            #printArea table { width: 100%; border-collapse: collapse; margin-bottom: 2mm; }
+            #printArea th, #printArea td {
+                border: 1px solid #555; padding: 1.2mm 2mm; text-align: left; font-size: 10.5pt;
+            }
+            #printArea th { background: #eee; font-weight: 900; }
+            #printArea td.num, #printArea th.num { text-align: right; }
+            #printArea td.ctr, #printArea th.ctr { text-align: center; }
+            #printArea tr { page-break-inside: avoid; }
+            #printArea .product-block { page-break-inside: avoid; }
+            #printArea .page-break { page-break-before: always; }
+            #printArea .total-row td { font-weight: 900; background: #f5f5f5; }
+        }
     </style>
 </head>
 <body class="px-3 sm:px-4 py-4 md:py-6 flex flex-col items-center">
@@ -198,7 +240,7 @@
     >
         <!-- 吹き出しメッセージ（動的に変更可能） -->
         <div id="pigSpeech" class="pig-speech-bubble bg-white text-stone-800 text-[11px] sm:text-xs font-black px-3 py-1.5 rounded-2xl mb-1.5 transition-all duration-300 max-w-[150px] text-center leading-tight">
-            ブヒッ！前日21時締め切り<br><span class="text-appAccentRed font-black">早めの予約だブ！🐷</span>
+            ブヒッ！予約は前日13時〜21時<br><span class="text-appAccentRed font-black">忘れずに予約だブ！🐷</span>
         </div>
 
         <!-- ブタのSVGイラスト (跳ねるアニメーション付) -->
@@ -261,8 +303,11 @@
 
             <div class="flex items-center justify-center gap-2 mt-2">
                 <div class="inline-flex items-center gap-1 px-3.5 py-1 text-xs font-black text-stone-800 bg-amber-100 rounded-full shadow-xs border border-amber-300/80 pulse-badge">
-                    <span>⏰</span> 受付締切: <strong class="text-appAccentRed font-black text-sm sm:text-base underline">前日 21:00 まで</strong>
+                    <span>⏰</span> 予約受付: <strong class="text-appAccentRed font-black text-sm sm:text-base underline">前日 13:00〜21:00</strong>
                 </div>
+            </div>
+            <div class="mt-1.5 text-[11px] font-black text-stone-600">
+                🗑️ キャンセルのみ <span class="text-appAccentRed">当日 朝9:30</span> まで可能
             </div>
         </header>
 
@@ -270,7 +315,7 @@
         <main id="studentView" class="space-y-4">
 
             <div id="closedBanner" class="hidden bg-stone-100 border-2 border-amber-300 text-stone-800 p-3.5 rounded-3xl text-center text-xs sm:text-sm font-black shadow-md fade-in-up">
-                ⚠️ 本日販売分の予約受付および変更・キャンセルは【前日21:00】で終了いたしました。
+                ⚠️ 予約受付は終了しました。
             </div>
 
             <div class="bg-appWarmBg border-2 border-orange-100 rounded-3xl p-4 sm:p-6 shadow-xl space-y-4">
@@ -472,7 +517,8 @@
                             <span class="w-2 h-2 rounded-full bg-appWarmAmber"></span> ご利用上の注意
                         </h3>
                         <ul class="space-y-1 pl-1 font-medium leading-relaxed text-[11px]">
-                            <li>• 予約・変更・取消は<strong class="text-appAccentRed font-black">前日 21:00 まで</strong>。</li>
+                            <li>• 予約・個数変更は<strong class="text-appAccentRed font-black">前日 13:00〜21:00</strong>。</li>
+                            <li>• キャンセルのみ<strong class="text-appAccentRed font-black">当日 朝9:30</strong>まで可能です。</li>
                             <li>• 代金引換と商品の受け渡しは<strong class="text-stone-800 font-black">昼休みに購買窓口</strong>で行います。</li>
                         </ul>
                     </div>
@@ -576,7 +622,7 @@
                 <!-- サブタブ1: リアルタイム受渡管理 -->
                 <div id="adminOrdersSection" class="space-y-4">
                     <div class="bg-appWarmBg border-2 border-stone-200 rounded-3xl p-4 shadow-md space-y-2">
-                        <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center justify-between gap-2 flex-wrap">
                             <h3 class="text-[11px] font-black text-stone-500 uppercase tracking-wider">商品別 予約・受渡進捗</h3>
                             <label class="flex items-center gap-1 text-[11px] font-black text-stone-600">
                                 受け取り日
@@ -591,6 +637,13 @@
                         <div id="summaryContainer" class="grid grid-cols-2 sm:grid-cols-3 gap-2">
                             <p class="text-xs text-stone-400 col-span-full font-medium">読み込み中...</p>
                         </div>
+                        <button
+                            type="button"
+                            onclick="printTodayOrders()"
+                            class="w-full mt-1 py-2.5 bg-appNavyAccent hover:bg-slate-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-xl transition-all cursor-pointer shadow-xs flex items-center justify-center gap-1.5"
+                        >
+                            🖨️ この日の予約を印刷する（商品別合計＋誰が何を注文）
+                        </button>
                     </div>
 
                     <div class="bg-appWarmBg border-2 border-stone-200 rounded-3xl p-4 shadow-md space-y-3">
@@ -605,15 +658,37 @@
                             >
                         </div>
 
+                        <!-- 並び替え -->
+                        <div class="flex items-center gap-2 text-xs font-black text-stone-600">
+                            <label for="adminSortSelect" class="whitespace-nowrap">↕️ 並び替え</label>
+                            <select
+                                id="adminSortSelect"
+                                onchange="onSortSelectChange()"
+                                class="flex-1 px-2.5 py-1.5 bg-stone-50 border-2 border-stone-200 rounded-xl text-xs font-bold outline-none focus:border-appNavyAccent cursor-pointer"
+                            >
+                                <option value="studentId:asc">生徒番号（小さい順）</option>
+                                <option value="studentId:desc">生徒番号（大きい順）</option>
+                                <option value="productName:asc">お弁当名（あいうえお順）</option>
+                                <option value="productName:desc">お弁当名（逆順）</option>
+                                <option value="quantity:desc">個数（多い順）</option>
+                                <option value="quantity:asc">個数（少ない順）</option>
+                                <option value="time:asc" selected>予約時間（早い順）</option>
+                                <option value="time:desc">予約時間（遅い順）</option>
+                                <option value="delivered:asc">受渡状態（未受渡が先）</option>
+                                <option value="delivered:desc">受渡状態（受渡済が先）</option>
+                            </select>
+                        </div>
+                        <p class="text-[10px] text-stone-400 font-bold -mt-1">※ 表の見出し（生徒番号・予約商品など）をタップしても並び替えできます</p>
+
                         <div class="overflow-x-auto rounded-2xl border border-stone-200">
                             <table class="w-full text-left border-collapse text-xs min-w-[420px]">
                                 <thead>
                                     <tr class="bg-stone-100 border-b border-stone-200 text-stone-600 font-bold text-[10px] tracking-wider uppercase">
-                                        <th class="py-2.5 px-2.5">生徒番号</th>
-                                        <th class="py-2.5 px-2.5">予約商品</th>
-                                        <th class="py-2.5 px-2.5 text-center">個数</th>
-                                        <th class="py-2.5 px-2.5">時間</th>
-                                        <th class="py-2.5 px-2.5 text-right">受渡状態</th>
+                                        <th class="py-2.5 px-2.5" data-sort="studentId" onclick="setAdminSort('studentId')">生徒番号<span class="sort-ind"></span></th>
+                                        <th class="py-2.5 px-2.5" data-sort="productName" onclick="setAdminSort('productName')">予約商品<span class="sort-ind"></span></th>
+                                        <th class="py-2.5 px-2.5 text-center" data-sort="quantity" onclick="setAdminSort('quantity')">個数<span class="sort-ind"></span></th>
+                                        <th class="py-2.5 px-2.5" data-sort="time" onclick="setAdminSort('time')">時間<span class="sort-ind"></span></th>
+                                        <th class="py-2.5 px-2.5 text-right" data-sort="delivered" onclick="setAdminSort('delivered')">受渡状態<span class="sort-ind"></span></th>
                                     </tr>
                                 </thead>
                                 <tbody id="adminOrderTable" class="divide-y divide-stone-100 font-bold text-stone-800">
@@ -685,6 +760,9 @@
         <div class="balan-leaf"></div>
     </div>
 
+    <!-- 印刷専用エリア（画面には表示されず、印刷時のみ表示） -->
+    <div id="printArea"></div>
+
     <script>
         /* ============================================================
            Supabase 接続設定
@@ -707,6 +785,15 @@
         }
 
         /* ============================================================
+           受付時間の設定（画面表示・ボタン制御用）
+           ※ 最終的な受付可否の判定は Supabase 側（SQL）でも行ってください。
+           ============================================================ */
+        const RESERVE_OPEN_HOUR = 13;    // 前日 13:00 から受付開始
+        const RESERVE_CLOSE_HOUR = 21;   // 前日 21:00 で受付終了
+        const CANCEL_LIMIT_HOUR = 9;     // 当日 9:30 までキャンセル可能
+        const CANCEL_LIMIT_MIN = 30;
+
+        /* ============================================================
            状態
            ============================================================ */
         let productsData = [];          // 予約可能（在庫>0）な商品
@@ -714,6 +801,8 @@
         let currentAdminPassword = "";
         let adminOrdersCache = [];
         let isBeforeDeadlineGlobal = true;
+        let reservationOpenGlobal = true;   // 現在、予約受付中か（13:00〜21:00）
+        let adminSort = { key: 'time', dir: 'asc' };
         let currentAudio = null;
         let audioTimer = null;
 
@@ -722,16 +811,18 @@
 
         // ブタのセリフリスト（インタラクティブ表示用）
         const pigDialogues = [
-            "ブヒッ！前日21時締め切り<br><span class='text-appAccentRed font-black'>早めの予約だブ！🐷</span>",
+            "ブヒッ！予約は前日13時〜21時<br><span class='text-appAccentRed font-black'>忘れずに予約だブ！🐷</span>",
             "生姜焼き食べたら<br><span class='text-appWarmAmber font-black'>共食いだブ！🍗</span>",
             "タップしてくれて<br><span class='text-emerald-600 font-black'>ありがとうブ！🐽</span>",
             "お腹がすいたら<br><span class='text-appAccentRed font-black'>大将軍弁当だブ！🍱</span>",
+            "キャンセルは当日<br><span class='text-appAccentRed font-black'>朝9:30までだブ！⏰</span>",
             "豚をぶったら<br><span class='text-amber-800 font-black'>トンでった！</span>"
         ];
         let pigDialogueIndex = 0;
 
         window.onload = function() {
             loadProducts();
+            updateSortIndicators();
         };
 
         /* ============================================================
@@ -754,8 +845,39 @@
             return parts[1] + '/' + parts[2] + '(' + w + ')';
         }
 
+        // 'YYYY-MM-DD' → '2026年11月5日(木)'
+        function formatDateFullJP(s) {
+            if (!s) return '';
+            const parts = String(s).split('-').map(Number);
+            const w = ['日', '月', '火', '水', '木', '金', '土'][new Date(parts[0], parts[1] - 1, parts[2]).getDay()];
+            return parts[0] + '年' + parts[1] + '月' + parts[2] + '日(' + w + ')';
+        }
+
         function errMsg(err) {
             return (err && err.message) ? err.message : String(err);
+        }
+
+        function pad2(n) { return String(n).padStart(2, '0'); }
+
+        // 受け取り日（YYYY-MM-DD）から「前日 13:00〜21:00」の受付時間帯を日本時間で計算
+        function getReservationWindow(targetDate) {
+            if (!targetDate) return null;
+            const p = String(targetDate).split('-').map(Number);
+            if (p.length !== 3 || p.some(isNaN)) return null;
+            const base = new Date(Date.UTC(p[0], p[1] - 1, p[2]));
+            base.setUTCDate(base.getUTCDate() - 1);
+            const prev = base.toISOString().slice(0, 10);
+            return {
+                open: new Date(prev + 'T' + pad2(RESERVE_OPEN_HOUR) + ':00:00+09:00'),
+                close: new Date(prev + 'T' + pad2(RESERVE_CLOSE_HOUR) + ':00:00+09:00')
+            };
+        }
+
+        // 受け取り日当日 9:30 までキャンセル可能か
+        function isBeforeCancelLimit(pickupDate) {
+            if (!pickupDate) return false;
+            const limit = new Date(String(pickupDate) + 'T' + pad2(CANCEL_LIMIT_HOUR) + ':' + pad2(CANCEL_LIMIT_MIN) + ':00+09:00');
+            return new Date() < limit;
         }
 
         /* ============================================================
@@ -938,17 +1060,48 @@
             }
         }
 
+        // 受付時間（前日13:00〜21:00）の状態を反映：バナー表示とフォームの有効/無効
+        function applyReservationState(phase, res) {
+            const closedBanner = document.getElementById('closedBanner');
+            const submitBtn = document.getElementById('submitBtn');
+            const select = document.getElementById('productName');
+            const qty = document.getElementById('quantity');
+            const sid = document.getElementById('studentId');
+
+            reservationOpenGlobal = (phase === 'open');
+
+            if (phase === 'closed') {
+                closedBanner.textContent = '⚠️ 予約受付は【前日21:00】で終了いたしました。（予約の取り消しは当日9:30まで可能です）';
+                closedBanner.classList.remove('hidden');
+            } else if (phase === 'notyet') {
+                closedBanner.textContent = '⏳ 予約の受付は【前日13:00】から開始します。もうしばらくお待ちください。';
+                closedBanner.classList.remove('hidden');
+            } else {
+                closedBanner.classList.add('hidden');
+            }
+
+            const disabled = !reservationOpenGlobal;
+            submitBtn.disabled = disabled;
+            qty.disabled = disabled;
+            sid.disabled = disabled;
+            if (disabled) select.disabled = true;
+        }
+
         function renderProductsAndRanking(res) {
             const all = (res && res.allProducts) || [];
             productsData = all.filter(p => p.stock > 0);
             isBeforeDeadlineGlobal = !!(res && res.isBeforeDeadline);
 
-            const closedBanner = document.getElementById('closedBanner');
-            if (!isBeforeDeadlineGlobal) {
-                closedBanner.classList.remove('hidden');
-            } else {
-                closedBanner.classList.add('hidden');
+            // 受付時間の判定（サーバーの判定＋前日13:00〜21:00）
+            const win = getReservationWindow(res && res.targetDate);
+            const now = new Date();
+            let phase = 'open';
+            if (!isBeforeDeadlineGlobal || (win && now >= win.close)) {
+                phase = 'closed';
+            } else if (win && now < win.open) {
+                phase = 'notyet';
             }
+            applyReservationState(phase, res);
 
             // 受け取り日の表示
             const note = document.getElementById('targetDateNote');
@@ -974,7 +1127,7 @@
                 return;
             }
 
-            select.disabled = false;
+            select.disabled = !reservationOpenGlobal;
             productsData.forEach(p => {
                 const opt = document.createElement('option');
                 opt.value = String(p.id);
@@ -1061,7 +1214,28 @@
             orders.forEach(ord => {
                 const card = document.createElement('div');
                 card.className = 'bg-stone-50 border border-stone-200 rounded-2xl p-3.5 space-y-2.5 font-bold shadow-xs';
+
+                // 個数変更：受付時間内（サーバー判定）のみ
                 const isEditable = !!ord.editable;
+                // キャンセル：受け取り日当日 9:30 まで（受渡済みは不可）
+                const canCancel = !ord.delivered && isBeforeCancelLimit(ord.pickupDate);
+
+                let footerHtml = '';
+                if (canCancel) {
+                    footerHtml = `
+                        <div class="pt-1 flex justify-between items-center gap-2">
+                            <span class="text-[10px] text-stone-400 font-bold">キャンセルは当日 9:30 まで</span>
+                            <button
+                                type="button"
+                                data-role="cancel"
+                                class="px-2.5 py-1 text-[11px] font-black text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-lg transition-colors border border-rose-200 cursor-pointer"
+                            >
+                                🗑️ 予約を取り消す
+                            </button>
+                        </div>`;
+                } else if (!ord.delivered) {
+                    footerHtml = `<div class="pt-1 text-right text-[10px] text-stone-400 font-bold">※ キャンセル受付は当日9:30で終了しました</div>`;
+                }
 
                 card.innerHTML = `
                     <div class="flex justify-between items-start">
@@ -1089,17 +1263,7 @@
                         </div>
                     </div>
 
-                    ${isEditable ? `
-                        <div class="pt-1 flex justify-end">
-                            <button
-                                type="button"
-                                data-role="cancel"
-                                class="px-2.5 py-1 text-[11px] font-black text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-lg transition-colors border border-rose-200 cursor-pointer"
-                            >
-                                🗑️ 予約を取り消す
-                            </button>
-                        </div>
-                    ` : ''}
+                    ${footerHtml}
                 `;
 
                 // イベントは addEventListener で結び付ける（HTML文字列に値を埋め込まない）
@@ -1155,23 +1319,23 @@
            管理者ビュー切り替え・ログイン
            ============================================================ */
         function toggleAdminView() {
-    const studentView = document.getElementById('studentView');
-    const adminView = document.getElementById('adminView');
-    const btn = document.getElementById('adminSwitchBtn');
-    const pigContainer = document.getElementById('interactivePigContainer'); // ブタのコンテナを取得
+            const studentView = document.getElementById('studentView');
+            const adminView = document.getElementById('adminView');
+            const btn = document.getElementById('adminSwitchBtn');
+            const pigContainer = document.getElementById('interactivePigContainer'); // ブタのコンテナを取得
 
-    if (adminView.classList.contains('hidden')) {
-        studentView.classList.add('hidden');
-        adminView.classList.remove('hidden');
-        if (pigContainer) pigContainer.classList.add('hidden'); // 管理者画面ではブタを消す
-        btn.innerHTML = '<span>🏠</span> 生徒用メニュー';
-    } else {
-        adminView.classList.add('hidden');
-        studentView.classList.remove('hidden');
-        if (pigContainer) pigContainer.classList.remove('hidden'); // 生徒画面に戻ったらブタを再表示する
-        btn.innerHTML = '<span>⚙️</span> 管理者メニュー';
-    }
-}
+            if (adminView.classList.contains('hidden')) {
+                studentView.classList.add('hidden');
+                adminView.classList.remove('hidden');
+                if (pigContainer) pigContainer.classList.add('hidden'); // 管理者画面ではブタを消す
+                btn.innerHTML = '<span>🏠</span> 生徒用メニュー';
+            } else {
+                adminView.classList.add('hidden');
+                studentView.classList.remove('hidden');
+                if (pigContainer) pigContainer.classList.remove('hidden'); // 生徒画面に戻ったらブタを再表示する
+                btn.innerHTML = '<span>⚙️</span> 管理者メニュー';
+            }
+        }
 
         async function loginAdmin() {
             const passInput = document.getElementById('adminPassInput');
@@ -1350,6 +1514,190 @@
         }
 
         /* ============================================================
+           並び替え（生徒番号・お弁当名・個数・予約時間・受渡状態）
+           ============================================================ */
+        const sortComparators = {
+            studentId: (a, b) => {
+                const na = Number(a.studentId), nb = Number(b.studentId);
+                if (!isNaN(na) && !isNaN(nb)) return na - nb;
+                return String(a.studentId).localeCompare(String(b.studentId));
+            },
+            productName: (a, b) => String(a.productName).localeCompare(String(b.productName), 'ja'),
+            quantity: (a, b) => a.quantity - b.quantity,
+            time: (a, b) => String(a.time).localeCompare(String(b.time), 'ja', { numeric: true }),
+            delivered: (a, b) => (a.delivered ? 1 : 0) - (b.delivered ? 1 : 0)
+        };
+
+        function sortOrders(list) {
+            const cmp = sortComparators[adminSort.key] || sortComparators.time;
+            const sign = adminSort.dir === 'desc' ? -1 : 1;
+            return list.slice().sort((a, b) => {
+                const r = cmp(a, b) * sign;
+                if (r !== 0) return r;
+                // 同じ値の場合は生徒番号順 → 商品名順で安定させる
+                return sortComparators.studentId(a, b) || sortComparators.productName(a, b);
+            });
+        }
+
+        // 見出しクリックで並び替え（同じ列をもう一度押すと昇順/降順が切り替わる）
+        function setAdminSort(key) {
+            if (adminSort.key === key) {
+                adminSort.dir = adminSort.dir === 'asc' ? 'desc' : 'asc';
+            } else {
+                adminSort.key = key;
+                adminSort.dir = (key === 'quantity') ? 'desc' : 'asc';
+            }
+            syncSortSelect();
+            updateSortIndicators();
+            filterOrders();
+        }
+
+        function onSortSelectChange() {
+            const v = document.getElementById('adminSortSelect').value.split(':');
+            adminSort.key = v[0];
+            adminSort.dir = v[1];
+            updateSortIndicators();
+            filterOrders();
+        }
+
+        function syncSortSelect() {
+            const sel = document.getElementById('adminSortSelect');
+            const value = adminSort.key + ':' + adminSort.dir;
+            const exists = Array.from(sel.options).some(o => o.value === value);
+            if (exists) sel.value = value;
+        }
+
+        function updateSortIndicators() {
+            document.querySelectorAll('th[data-sort]').forEach(th => {
+                const ind = th.querySelector('.sort-ind');
+                if (!ind) return;
+                ind.textContent = (th.dataset.sort === adminSort.key) ? (adminSort.dir === 'asc' ? ' ▲' : ' ▼') : '';
+            });
+        }
+
+        function filterOrders() {
+            const query = document.getElementById('orderSearchInput').value.toLowerCase().trim();
+            let list = adminOrdersCache;
+            if (query) {
+                list = adminOrdersCache.filter(o =>
+                    String(o.studentId).includes(query) || String(o.productName).toLowerCase().includes(query)
+                );
+            }
+            renderTable(sortOrders(list));
+        }
+
+        /* ============================================================
+           印刷：この日の予約（商品別合計 ＋ 商品別の予約者 ＋ 生徒番号順一覧）
+           ============================================================ */
+        function printTodayOrders() {
+            if (!adminOrdersCache || adminOrdersCache.length === 0) {
+                showAdminAlert('印刷する注文がありません。', true);
+                return;
+            }
+
+            const dateStr = document.getElementById('adminDate').value;
+            const printedAt = new Date().toLocaleString('ja-JP');
+
+            // 商品名 → 価格
+            const priceMap = {};
+            (adminProducts || []).forEach(p => { priceMap[p.name] = p.price; });
+
+            const orderPrice = (o) => {
+                if (typeof o.totalPrice === 'number') return o.totalPrice;
+                return (priceMap[o.productName] || 0) * o.quantity;
+            };
+
+            // 商品ごとにグループ化
+            const groups = {};
+            adminOrdersCache.forEach(o => {
+                if (!groups[o.productName]) groups[o.productName] = [];
+                groups[o.productName].push(o);
+            });
+            const productNames = Object.keys(groups).sort((a, b) => a.localeCompare(b, 'ja'));
+
+            let grandQty = 0;
+            let grandPrice = 0;
+
+            // ① 商品別合計
+            let summaryRows = '';
+            productNames.forEach(name => {
+                const list = groups[name];
+                const qty = list.reduce((s, o) => s + o.quantity, 0);
+                const price = list.reduce((s, o) => s + orderPrice(o), 0);
+                grandQty += qty;
+                grandPrice += price;
+                summaryRows += `
+                    <tr>
+                        <td>${escapeHtml(name)}</td>
+                        <td class="num">${priceMap[name] != null ? '¥' + Number(priceMap[name]).toLocaleString() : '-'}</td>
+                        <td class="num"><strong>${qty}</strong> 個</td>
+                        <td class="num">${list.length} 件</td>
+                        <td class="num">¥${price.toLocaleString()}</td>
+                    </tr>`;
+            });
+
+            // ② 商品別 予約者一覧
+            let productBlocks = '';
+            productNames.forEach(name => {
+                const list = groups[name].slice().sort(sortComparators.studentId);
+                const qty = list.reduce((s, o) => s + o.quantity, 0);
+                const rows = list.map(o => `
+                    <tr>
+                        <td>${escapeHtml(o.studentId)}</td>
+                        <td class="ctr">${o.quantity} 個</td>
+                        <td class="num">¥${orderPrice(o).toLocaleString()}</td>
+                        <td class="ctr">${o.delivered ? '済' : '□'}</td>
+                    </tr>`).join('');
+                productBlocks += `
+                    <div class="product-block">
+                        <h3>■ ${escapeHtml(name)}　合計 ${qty} 個（${list.length} 件）</h3>
+                        <table>
+                            <thead><tr><th>生徒番号</th><th class="ctr">個数</th><th class="num">金額</th><th class="ctr">受渡</th></tr></thead>
+                            <tbody>${rows}</tbody>
+                        </table>
+                    </div>`;
+            });
+
+            // ③ 生徒番号順 一覧（誰が何を頼んだか）
+            const byStudent = adminOrdersCache.slice().sort((a, b) =>
+                sortComparators.studentId(a, b) || sortComparators.productName(a, b));
+            const studentRows = byStudent.map(o => `
+                <tr>
+                    <td>${escapeHtml(o.studentId)}</td>
+                    <td>${escapeHtml(o.productName)}</td>
+                    <td class="ctr">${o.quantity} 個</td>
+                    <td class="num">¥${orderPrice(o).toLocaleString()}</td>
+                    <td class="ctr">${o.delivered ? '済' : '□'}</td>
+                </tr>`).join('');
+
+            document.getElementById('printArea').innerHTML = `
+                <h1>大将軍弁当 予約一覧</h1>
+                <div class="meta">受け取り日: <strong>${escapeHtml(formatDateFullJP(dateStr))}</strong>　／　印刷日時: ${escapeHtml(printedAt)}</div>
+
+                <h2>① 商品別 合計</h2>
+                <table>
+                    <thead><tr><th>商品名</th><th class="num">単価</th><th class="num">合計個数</th><th class="num">予約件数</th><th class="num">金額合計</th></tr></thead>
+                    <tbody>
+                        ${summaryRows}
+                        <tr class="total-row"><td>総合計</td><td></td><td class="num">${grandQty} 個</td><td class="num">${adminOrdersCache.length} 件</td><td class="num">¥${grandPrice.toLocaleString()}</td></tr>
+                    </tbody>
+                </table>
+
+                <h2>② 商品別 予約者一覧（生徒番号順）</h2>
+                ${productBlocks}
+
+                <div class="page-break"></div>
+                <h2>③ 生徒番号順 一覧（誰が何を注文したか）</h2>
+                <table>
+                    <thead><tr><th>生徒番号</th><th>商品名</th><th class="ctr">個数</th><th class="num">金額</th><th class="ctr">受渡</th></tr></thead>
+                    <tbody>${studentRows}</tbody>
+                </table>
+            `;
+
+            window.print();
+        }
+
+        /* ============================================================
            メニュー管理  (旧 addNewProduct / updateProductDetails / deleteProductItem)
            ============================================================ */
         function renderAdminProductsTable(products) {
@@ -1480,18 +1828,6 @@
             setTimeout(() => el.classList.add('hidden'), 4000);
         }
 
-        function filterOrders() {
-            const query = document.getElementById('orderSearchInput').value.toLowerCase().trim();
-            if (!query) {
-                renderTable(adminOrdersCache);
-                return;
-            }
-            const filtered = adminOrdersCache.filter(o =>
-                o.studentId.includes(query) || o.productName.toLowerCase().includes(query)
-            );
-            renderTable(filtered);
-        }
-
         /* ============================================================
            予約フォーム  (旧 submitOrder)
            ============================================================ */
@@ -1518,6 +1854,11 @@
 
         async function handleFormSubmit(e) {
             e.preventDefault();
+
+            if (!reservationOpenGlobal) {
+                showMessage('現在は予約受付時間外です（受付は前日 13:00〜21:00）。');
+                return;
+            }
 
             const studentId = document.getElementById('studentId').value.trim();
             const productId = Number(document.getElementById('productName').value);
@@ -1599,7 +1940,7 @@
         function resetToNewReservation() {
             document.getElementById('completionCard').classList.add('hidden');
             document.getElementById('reservationCard').classList.remove('hidden');
-            document.getElementById('submitBtn').disabled = false;
+            document.getElementById('submitBtn').disabled = !reservationOpenGlobal;
             updatePricePreview();
         }
 
