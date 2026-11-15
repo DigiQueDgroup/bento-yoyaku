@@ -1369,7 +1369,9 @@
             const win = getReservationWindow(res && res.targetDate);
             const now = new Date();
             let phase = 'open';
-            if (!isBeforeDeadlineGlobal || (win && now >= win.close)) {
+            if (res && (res.phase === 'open' || res.phase === 'notyet' || res.phase === 'closed')) {
+                phase = res.phase;   // サーバー（Supabase）の判定を優先
+            } else if (!isBeforeDeadlineGlobal || (win && now >= win.close)) {
                 phase = 'closed';
             } else if (win && now < win.open) {
                 phase = 'notyet';
@@ -1491,7 +1493,9 @@
                 // 個数変更：受付時間内（サーバー判定）のみ
                 const isEditable = !!ord.editable;
                 // キャンセル：受け取り日当日 9:30 まで（受渡済みは不可）
-                const canCancel = !ord.delivered && isBeforeCancelLimit(ord.pickupDate);
+                const canCancel = (typeof ord.cancelable === 'boolean')
+                    ? ord.cancelable   // サーバー（Supabase）の判定を優先
+                    : (!ord.delivered && isBeforeCancelLimit(ord.pickupDate));
 
                 let footerHtml = '';
                 if (canCancel) {
