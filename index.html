@@ -581,6 +581,19 @@
                         </div>
                     </div>
 
+                    <!-- 通知（リマインド） -->
+                    <div id="pushCard" class="hidden bg-amber-50 border border-amber-200 rounded-2xl p-3.5 space-y-2">
+                        <div class="font-black text-xs sm:text-sm text-stone-800 flex items-center gap-1">🔔 通知でお知らせ</div>
+                        <p class="text-[11px] font-bold text-stone-600 leading-relaxed">
+                            上の生徒番号で、<strong>前日20時の「予約しわすれ」</strong>と<strong>当日朝の「今日のお弁当」</strong>をお知らせします。
+                        </p>
+                        <div id="pushStatus" class="text-[11px] font-black text-stone-600"></div>
+                        <div class="flex gap-2">
+                            <button type="button" id="pushOnBtn" onclick="enablePush()" class="flex-1 py-2 bg-appWarmAmber hover:bg-amber-600 active:scale-95 text-white font-black text-xs rounded-xl cursor-pointer shadow-xs">🔔 通知をオンにする</button>
+                            <button type="button" id="pushOffBtn" onclick="disablePush()" class="hidden px-3 py-2 bg-stone-200 hover:bg-stone-300 text-stone-700 font-black text-xs rounded-xl cursor-pointer">オフにする</button>
+                        </div>
+                    </div>
+
                     <div id="myOrdersStatus" class="hidden text-xs font-black p-3 rounded-xl border-2"></div>
 
                     <div id="myOrdersResult" class="space-y-3">
@@ -903,6 +916,9 @@
         const SUPABASE_URL = 'https://dqkwrdnssmhjdngdoaxd.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_LfZgYmdtUfT1FDISrUvblw_gh_YlZzV';
 
+        // プッシュ通知用の公開鍵（vapid-keygen.html で作った「公開鍵」を貼る。空のままなら通知機能は非表示）
+        const VAPID_PUBLIC_KEY = '';
+
         const isConfigured = !SUPABASE_URL.includes('YOUR_PROJECT_REF') && !SUPABASE_ANON_KEY.includes('YOUR_SUPABASE');
         const sb = isConfigured ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
@@ -1092,6 +1108,141 @@
             try { localStorage.setItem('bentoIosTipClosed', '1'); } catch (e) {}
         }
 
+
+        /* ============================================================
+           プッシュ通知（PWA）
+           ============================================================ */
+        function pushSupported() {
+            return ('serviceWorker' in navigator) && ('PushManager' in window) && ('Notification' in window)
+                && (location.protocol === 'https:');
+        }
+
+        function urlBase64ToUint8Array(b64) {
+            const pad = '='.repeat((4 - (b64.length % 4)) % 4);
+            const raw = atob((b64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+            const arr = new Uint8Array(raw.length);
+            for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+            return arr;
+        }
+
+        function setPushStatus(msg, isError) {
+            const el = document.getElementById('pushStatus');
+            if (!el) return;
+            el.textContent = msg;
+            el.className = 'text-[11px] font-black ' + (isError ? 'text-rose-600' : 'text-stone-600');
+        }
+
+        function isIosDevice() {
+            const ua = navigator.userAgent || '';
+            return /iphone|ipad|ipod/i.test(ua) || (/Macintosh/i.test(ua) && navigator.maxTouchPoints > 1);
+        }
+
+        function readPushStudent() {
+            try { return localStorage.getItem('bentoPushStudent') || ''; } catch (e) { return ''; }
+        }
+
+        async function initPush() {
+            const card = document.getElementById('pushCard');
+            if (!card || !VAPID_PUBLIC_KEY) return;      // 鍵が未設定なら非表示のまま
+            card.classList.remove('hidden');
+
+            const onBtn = document.getElementById('pushOnBtn');
+            const offBtn = document.getElementById('pushOffBtn');
+
+            if (isIosDevice() && !isStandalone()) {
+                onBtn.disabled = true;
+                onBtn.classList.add('opacity-50');
+                setPushStatus('iPhoneでは、Safariの共有ボタン →「ホーム画面に追加」してから、そのアイコンで開くと通知を使えます。', false);
+                return;
+            }
+            if (!pushSupported()) {
+                onBtn.disabled = true;
+                onBtn.classList.add('opacity-50');
+                setPushStatus('この端末・ブラウザは通知に対応していません。', true);
+                return;
+            }
+
+            try {
+                const reg = await navigator.serviceWorker.ready;
+                const sub = await reg.pushManager.getSubscription();
+                const sid = readPushStudent();
+                if (sub && sid && Notification.permission === 'granted') {
+                    setPushStatus('✅ 通知はオンです（生徒番号 ' + sid + '）', false);
+                    onBtn.textContent = '🔔 生徒番号を変更して登録';
+                    offBtn.classList.remove('hidden');
+                } else if (Notification.permission === 'denied') {
+                    setPushStatus('通知がブロックされています。端末の設定でこのアプリの通知を許可してください。', true);
+                }
+            } catch (e) { /* 何もしない */ }
+        }
+
+        async function enablePush() {
+            const sid = document.getElementById('myStudentIdInput').value.trim();
+            if (!/^[0-9]{4}$/.test(sid)) {
+                setPushStatus('上の入力欄に、生徒番号（4桁）を入力してください。', true);
+                SFX.play('error');
+                return;
+            }
+            if (!pushSupported()) { setPushStatus('この端末・ブラウザは通知に対応していません。', true); return; }
+
+            const onBtn = document.getElementById('pushOnBtn');
+            onBtn.disabled = true;
+            try {
+                const perm = await Notification.requestPermission();
+                if (perm !== 'granted') {
+                    setPushStatus('通知が許可されませんでした。端末の設定から許可してください。', true);
+                    return;
+                }
+                const reg = await navigator.serviceWorker.ready;
+                let sub = await reg.pushManager.getSubscription();
+                if (!sub) {
+                    sub = await reg.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+                    });
+                }
+                const j = sub.toJSON();
+                const res = await rpc('save_push_subscription', {
+                    p_student_id: sid,
+                    p_endpoint: j.endpoint,
+                    p_p256dh: j.keys.p256dh,
+                    p_auth: j.keys.auth
+                });
+                if (!res || !res.success) throw new Error((res && res.message) || '登録に失敗しました');
+
+                try { localStorage.setItem('bentoPushStudent', sid); } catch (e) {}
+                setPushStatus('✅ 通知をオンにしました（生徒番号 ' + sid + '）', false);
+                onBtn.textContent = '🔔 生徒番号を変更して登録';
+                document.getElementById('pushOffBtn').classList.remove('hidden');
+                SFX.play('ding');
+                reg.showNotification('🍱 通知をオンにしました', {
+                    body: '前日20時の予約しわすれと、当日朝のお弁当をお知らせします。',
+                    icon: 'icon-192.png'
+                });
+            } catch (err) {
+                setPushStatus('通知を登録できませんでした: ' + errMsg(err), true);
+                SFX.play('error');
+            } finally {
+                onBtn.disabled = false;
+            }
+        }
+
+        async function disablePush() {
+            try {
+                const reg = await navigator.serviceWorker.ready;
+                const sub = await reg.pushManager.getSubscription();
+                if (sub) {
+                    const endpoint = sub.endpoint;
+                    await sub.unsubscribe();
+                    try { await rpc('delete_push_subscription', { p_endpoint: endpoint }); } catch (e) {}
+                }
+            } catch (e) { /* 何もしない */ }
+            try { localStorage.removeItem('bentoPushStudent'); } catch (e) {}
+            setPushStatus('通知をオフにしました。', false);
+            document.getElementById('pushOnBtn').textContent = '🔔 通知をオンにする';
+            document.getElementById('pushOffBtn').classList.add('hidden');
+        }
+
         function initPwa() {
             // iPhone / iPad の Safari には自動の「追加」ボタンが無いので、案内を表示
             const ua = navigator.userAgent || '';
@@ -1111,6 +1262,7 @@
             applyTheme(currentTheme());
             updateSoundButton();
             initPwa();
+            initPush();
             loadProducts();
             updateSortIndicators();
         };
