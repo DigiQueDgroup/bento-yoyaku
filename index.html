@@ -917,7 +917,7 @@
         const SUPABASE_ANON_KEY = 'sb_publishable_LfZgYmdtUfT1FDISrUvblw_gh_YlZzV';
 
         // プッシュ通知用の公開鍵（vapid-keygen.html で作った「公開鍵」を貼る。空のままなら通知機能は非表示）
-        const VAPID_PUBLIC_KEY = '';
+        const VAPID_PUBLIC_KEY = 'BEJivJsvdhB3SWc-JenxmExiNrp9Z3W-H8m27b8ViZbslhV2-I1tU7na1NddNDcwQV4tmMWOTvAN5XnNw4kt1f0';
 
         const isConfigured = !SUPABASE_URL.includes('YOUR_PROJECT_REF') && !SUPABASE_ANON_KEY.includes('YOUR_SUPABASE');
         const sb = isConfigured ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
