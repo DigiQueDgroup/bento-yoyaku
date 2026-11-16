@@ -3,7 +3,7 @@
    - CDN（Tailwind・フォントなど）は保存して高速表示
    - Supabase（予約データ）は一切キャッシュしない
    ※ 大きく更新したときは CACHE の番号を上げてください */
-const CACHE = 'bento-v1';
+const CACHE = 'bento-v2';
 const SHELL = ['./', 'index.html', 'manifest.json', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
 const CDN_HOSTS = ['cdn.tailwindcss.com', 'cdn.jsdelivr.net', 'fonts.googleapis.com', 'fonts.gstatic.com'];
 
@@ -70,4 +70,35 @@ self.addEventListener('fetch', function (event) {
             })
         );
     }
+});
+
+/* ===== プッシュ通知 ===== */
+self.addEventListener('push', function (event) {
+    let data = {};
+    try { data = event.data ? event.data.json() : {}; }
+    catch (e) { data = { body: event.data ? event.data.text() : '' }; }
+
+    const title = data.title || '大将軍弁当';
+    event.waitUntil(
+        self.registration.showNotification(title, {
+            body: data.body || '',
+            icon: 'icon-192.png',
+            badge: 'icon-192.png',
+            tag: data.tag || 'bento',
+            data: { url: data.url || './' }
+        })
+    );
+});
+
+self.addEventListener('notificationclick', function (event) {
+    event.notification.close();
+    const target = new URL((event.notification.data && event.notification.data.url) || './', self.registration.scope).href;
+    event.waitUntil(
+        self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (list) {
+            for (const c of list) {
+                if ('focus' in c) return c.focus();
+            }
+            return self.clients.openWindow(target);
+        })
+    );
 });
