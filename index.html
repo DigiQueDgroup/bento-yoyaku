@@ -903,6 +903,56 @@
         <div class="balan-leaf"></div>
     </div>
 
+    <!-- 初回の案内（ホーム画面に追加 / 通知を許可） -->
+    <div id="onboardOverlay" class="hidden fixed inset-0 z-[60] bg-black/50 flex items-end sm:items-center justify-center p-3">
+        <div class="w-full max-w-md bg-appWarmBg border-2 border-orange-100 rounded-3xl p-5 shadow-2xl space-y-3.5 max-h-[90vh] overflow-y-auto fade-in-up">
+            <div class="text-center space-y-0.5">
+                <div class="text-3xl">🍱</div>
+                <h2 class="text-lg font-black text-stone-800 font-pop">はじめにかんたん設定</h2>
+                <p class="text-[11px] font-bold text-stone-500">アプリのように使えて、予約のしわすれも防げます</p>
+            </div>
+
+            <!-- ① ホーム画面に追加 -->
+            <div id="obInstall" class="hidden bg-stone-50 border border-stone-200 rounded-2xl p-3.5 space-y-2">
+                <div class="font-black text-xs sm:text-sm text-stone-800">① ホーム画面に追加</div>
+                <div id="obIosSteps" class="hidden text-[11px] font-bold text-stone-600 leading-relaxed">
+                    Safariの<strong>共有ボタン（□に↑）</strong>を押し、「<strong>ホーム画面に追加</strong>」→「追加」を選びます。<br>
+                    追加できたら、<strong>ホーム画面のアイコンから開いてください。</strong>
+                </div>
+                <button type="button" id="obAndroidBtn" onclick="obInstall()" class="hidden w-full py-2.5 bg-appWarmAmber hover:bg-amber-600 active:scale-95 text-white font-black text-xs sm:text-sm rounded-xl cursor-pointer shadow-xs">📲 ホーム画面に追加する</button>
+                <div id="obAndroidManual" class="hidden text-[11px] font-bold text-stone-600 leading-relaxed">
+                    ブラウザのメニュー（⋮）から、「<strong>ホーム画面に追加</strong>」または「<strong>アプリをインストール</strong>」を選んでください。
+                </div>
+            </div>
+
+            <!-- ② 通知 -->
+            <div id="obPush" class="hidden bg-amber-50 border border-amber-200 rounded-2xl p-3.5 space-y-2">
+                <div class="font-black text-xs sm:text-sm text-stone-800">② 通知をオンにする</div>
+                <p class="text-[11px] font-bold text-stone-600 leading-relaxed">
+                    <strong>前日20時の「予約しわすれ」</strong>と<strong>当日朝の「今日のお弁当」</strong>をお知らせします。
+                </p>
+                <div id="obPushIosNote" class="hidden text-[11px] font-black text-amber-900 leading-relaxed">
+                    通知は、①の<strong>ホーム画面のアイコンから開いたあと</strong>に設定できます。まず①を行ってください。
+                </div>
+                <div id="obPushForm" class="space-y-2">
+                    <input
+                        type="number"
+                        id="obStudentId"
+                        inputmode="numeric"
+                        class="w-full px-3.5 py-2.5 bg-stone-50 border-2 border-stone-200 rounded-xl text-base font-black text-stone-800 outline-none focus:border-appWarmAmber"
+                        placeholder="生徒番号（4桁）"
+                        min="1000"
+                        max="9999"
+                    >
+                    <button type="button" id="obPushBtn" onclick="obEnablePush()" class="w-full py-2.5 bg-appWarmAmber hover:bg-amber-600 active:scale-95 text-white font-black text-xs sm:text-sm rounded-xl cursor-pointer shadow-xs">🔔 通知を許可する</button>
+                </div>
+                <div id="obPushStatus" class="text-[11px] font-black text-stone-600"></div>
+            </div>
+
+            <button type="button" onclick="obLater()" class="w-full py-2 text-xs font-black text-stone-500 hover:text-stone-900 cursor-pointer">あとで（3日間表示しません）</button>
+        </div>
+    </div>
+
     <!-- 印刷専用エリア（画面には表示されず、印刷時のみ表示） -->
     <div id="printArea"></div>
 
@@ -1088,11 +1138,14 @@
             e.preventDefault();
             deferredInstallPrompt = e;
             if (!isStandalone()) document.getElementById('installBtn').classList.remove('hidden');
+            if (typeof renderOnboarding === 'function') renderOnboarding();
         });
 
         window.addEventListener('appinstalled', function () {
             deferredInstallPrompt = null;
+            window.__justInstalled = true;
             document.getElementById('installBtn').classList.add('hidden');
+            if (typeof renderOnboarding === 'function') renderOnboarding();
         });
 
         async function installApp() {
@@ -1176,22 +1229,15 @@
             } catch (e) { /* 何もしない */ }
         }
 
-        async function enablePush() {
-            const sid = document.getElementById('myStudentIdInput').value.trim();
-            if (!/^[0-9]{4}$/.test(sid)) {
-                setPushStatus('上の入力欄に、生徒番号（4桁）を入力してください。', true);
-                SFX.play('error');
-                return;
-            }
-            if (!pushSupported()) { setPushStatus('この端末・ブラウザは通知に対応していません。', true); return; }
-
-            const onBtn = document.getElementById('pushOnBtn');
-            onBtn.disabled = true;
+        // 通知の登録そのもの（結果を {ok, message} で返す）
+        async function subscribePush(sid) {
+            if (!/^[0-9]{4}$/.test(sid)) return { ok: false, message: '生徒番号（4桁）を入力してください。' };
+            if (!VAPID_PUBLIC_KEY) return { ok: false, message: '通知の設定がまだ完了していません。' };
+            if (!pushSupported()) return { ok: false, message: 'この端末・ブラウザは通知に対応していません。' };
             try {
                 const perm = await Notification.requestPermission();
                 if (perm !== 'granted') {
-                    setPushStatus('通知が許可されませんでした。端末の設定から許可してください。', true);
-                    return;
+                    return { ok: false, message: '通知が許可されませんでした。端末の設定から許可してください。' };
                 }
                 const reg = await navigator.serviceWorker.ready;
                 let sub = await reg.pushManager.getSubscription();
@@ -1211,20 +1257,46 @@
                 if (!res || !res.success) throw new Error((res && res.message) || '登録に失敗しました');
 
                 try { localStorage.setItem('bentoPushStudent', sid); } catch (e) {}
-                setPushStatus('✅ 通知をオンにしました（生徒番号 ' + sid + '）', false);
-                onBtn.textContent = '🔔 生徒番号を変更して登録';
-                document.getElementById('pushOffBtn').classList.remove('hidden');
-                SFX.play('ding');
-                reg.showNotification('🍱 通知をオンにしました', {
-                    body: '前日20時の予約しわすれと、当日朝のお弁当をお知らせします。',
-                    icon: 'icon-192.png'
-                });
+                markPushOn(sid);
+                try {
+                    reg.showNotification('🍱 通知をオンにしました', {
+                        body: '前日20時の予約しわすれと、当日朝のお弁当をお知らせします。',
+                        icon: 'icon-192.png'
+                    });
+                } catch (e) {}
+                return { ok: true, message: '✅ 通知をオンにしました（生徒番号 ' + sid + '）' };
             } catch (err) {
-                setPushStatus('通知を登録できませんでした: ' + errMsg(err), true);
-                SFX.play('error');
-            } finally {
-                onBtn.disabled = false;
+                return { ok: false, message: '通知を登録できませんでした: ' + errMsg(err) };
             }
+        }
+
+        // 「予約の確認・変更」タブの通知カードを「オン」の表示にする
+        function markPushOn(sid) {
+            const st = document.getElementById('pushStatus');
+            if (st) setPushStatus('✅ 通知はオンです（生徒番号 ' + sid + '）', false);
+            const onBtn = document.getElementById('pushOnBtn');
+            if (onBtn) onBtn.textContent = '🔔 生徒番号を変更して登録';
+            const offBtn = document.getElementById('pushOffBtn');
+            if (offBtn) offBtn.classList.remove('hidden');
+        }
+
+        async function enablePush() {
+            const sid = document.getElementById('myStudentIdInput').value.trim();
+            if (!/^[0-9]{4}$/.test(sid)) {
+                setPushStatus('上の入力欄に、生徒番号（4桁）を入力してください。', true);
+                SFX.play('error');
+                return;
+            }
+            const onBtn = document.getElementById('pushOnBtn');
+            onBtn.disabled = true;
+            const r = await subscribePush(sid);
+            if (r.ok) {
+                SFX.play('ding');
+            } else {
+                setPushStatus(r.message, true);
+                SFX.play('error');
+            }
+            onBtn.disabled = false;
         }
 
         async function disablePush() {
@@ -1243,13 +1315,120 @@
             document.getElementById('pushOffBtn').classList.add('hidden');
         }
 
+
+        /* ============================================================
+           初回の案内（ホーム画面に追加 / 通知を許可）
+           ・スマホで開いたときだけ表示（パソコンでは出しません）
+           ・「あとで」を押すと3日間は表示しません
+           ・やることが無くなれば（追加済み＆通知オン）自動で出なくなります
+           ============================================================ */
+        const OB_SNOOZE_MS = 3 * 24 * 60 * 60 * 1000;
+        let obClosedThisSession = false;
+
+        function isMobileDevice() {
+            return isIosDevice() || /android/i.test(navigator.userAgent || '');
+        }
+
+        function obSnoozed() {
+            try { return Date.now() < Number(localStorage.getItem('bentoObSnooze') || 0); } catch (e) { return false; }
+        }
+
+        function obNeeds() {
+            const res = { install: false, push: false, ios: false };
+            if (!isMobileDevice()) return res;
+
+            const ios = isIosDevice();
+            const standalone = isStandalone();
+            res.ios = ios;
+            res.install = !standalone && !window.__justInstalled;
+
+            if (VAPID_PUBLIC_KEY) {
+                const hasNotif = ('Notification' in window);
+                const done = !!readPushStudent() && hasNotif && Notification.permission === 'granted';
+                const denied = hasNotif && Notification.permission === 'denied';
+                // iPhoneのSafari（アプリ化前）は通知を使えないので、案内だけ出す
+                const iosNeedsInstall = ios && !standalone;
+                const usable = pushSupported() || iosNeedsInstall;
+                res.push = usable && !done && !denied;
+            }
+            return res;
+        }
+
+        function renderOnboarding() {
+            const ov = document.getElementById('onboardOverlay');
+            if (!ov) return;
+            if (obClosedThisSession || obSnoozed()) { ov.classList.add('hidden'); return; }
+
+            const n = obNeeds();
+            if (!n.install && !n.push) { ov.classList.add('hidden'); return; }
+
+            window.__onboardShown = true;
+            const standalone = isStandalone();
+
+            // ① ホーム画面に追加
+            document.getElementById('obInstall').classList.toggle('hidden', !n.install);
+            document.getElementById('obIosSteps').classList.toggle('hidden', !(n.install && n.ios));
+            document.getElementById('obAndroidBtn').classList.toggle('hidden', !(n.install && !n.ios && !!deferredInstallPrompt));
+            document.getElementById('obAndroidManual').classList.toggle('hidden', !(n.install && !n.ios && !deferredInstallPrompt));
+
+            // ② 通知
+            const iosWait = n.ios && !standalone;   // iPhoneはアプリ化してから通知を設定
+            document.getElementById('obPush').classList.toggle('hidden', !n.push);
+            document.getElementById('obPushIosNote').classList.toggle('hidden', !iosWait);
+            document.getElementById('obPushForm').classList.toggle('hidden', iosWait);
+
+            ov.classList.remove('hidden');
+        }
+
+        async function obInstall() {
+            await installApp();
+            renderOnboarding();
+        }
+
+        async function obEnablePush() {
+            const sid = document.getElementById('obStudentId').value.trim();
+            const st = document.getElementById('obPushStatus');
+            const btn = document.getElementById('obPushBtn');
+
+            if (!/^[0-9]{4}$/.test(sid)) {
+                st.textContent = '生徒番号を4桁で入力してください。';
+                st.className = 'text-[11px] font-black text-rose-600';
+                SFX.play('error');
+                return;
+            }
+            btn.disabled = true;
+            const r = await subscribePush(sid);
+            btn.disabled = false;
+
+            st.textContent = r.message;
+            st.className = 'text-[11px] font-black ' + (r.ok ? 'text-emerald-600' : 'text-rose-600');
+            if (r.ok) {
+                SFX.play('ding');
+                const my = document.getElementById('myStudentIdInput');
+                if (my && !my.value) my.value = sid;
+                setTimeout(renderOnboarding, 1500);   // 他にやることが無ければ自動で閉じる
+            } else {
+                SFX.play('error');
+            }
+        }
+
+        function obLater() {
+            obClosedThisSession = true;
+            try { localStorage.setItem('bentoObSnooze', String(Date.now() + OB_SNOOZE_MS)); } catch (e) {}
+            document.getElementById('onboardOverlay').classList.add('hidden');
+        }
+
+        function initOnboarding() {
+            renderOnboarding();
+        }
+
         function initPwa() {
             // iPhone / iPad の Safari には自動の「追加」ボタンが無いので、案内を表示
             const ua = navigator.userAgent || '';
             const isIOS = /iphone|ipad|ipod/i.test(ua) || (/Macintosh/i.test(ua) && navigator.maxTouchPoints > 1);
             let closed = false;
             try { closed = localStorage.getItem('bentoIosTipClosed') === '1'; } catch (e) {}
-            if (isIOS && !isStandalone() && !closed) {
+            if (isIOS && !isStandalone() && !closed && !window.__onboardShown) {
                 document.getElementById('iosInstallTip').classList.remove('hidden');
             }
 
@@ -1261,6 +1440,7 @@
         window.onload = function() {
             applyTheme(currentTheme());
             updateSoundButton();
+            initOnboarding();
             initPwa();
             initPush();
             loadProducts();
