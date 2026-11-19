@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" data-theme="bento">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -13,49 +13,99 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="icon" type="image/png" href="icon-192.png">
-    <!-- ダークモード：画面のちらつき防止のため最初に適用 -->
+    <!-- ダークモード：画面のちらつき防止のため最初に適用（daisyUI のテーマ名を data-theme に設定） -->
     <script>
         (function () {
             try {
                 var t = localStorage.getItem('bentoTheme');
                 if (!t) t = (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
                 if (t === 'dark') document.documentElement.classList.add('dark');
+                document.documentElement.setAttribute('data-theme', t === 'dark' ? 'bentodark' : 'bento');
             } catch (e) {}
         })();
     </script>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- daisyUI 5 + Tailwind CSS 4（ビルド不要のCDN版） -->
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <!-- Supabase JS クライアント -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@700;800;900&family=Noto+Sans+JP:wght@500;700;900&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        appWarmBg: '#FFFDF9',
-                        appAccentRed: '#D9534F',
-                        appWarmAmber: '#E67E22',
-                        appSoftCream: '#FDF6E3',
-                        appDeepBrown: '#4A3B32',
-                        appNavyAccent: '#34495E',
-                        appBalanGreen: '#1E6B38',
-                        appBalanDark: '#134A25',
-                    },
-                    fontFamily: {
-                        pop: ['"Zen Maru Gothic"', '"Noto Sans JP"', 'sans-serif'],
-                        sans: ['"Noto Sans JP"', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
     <style>
+        /* ============================================================
+           daisyUI カスタムテーマ「bento」（温かみのあるオレンジ＆ブラウン）
+           ・色を変えたいときは、この2つのブロックの --color-* を書き換えるだけです。
+           ・daisyUI の btn / card / badge / alert などが、自動でこの色になります。
+           ============================================================ */
+        [data-theme="bento"] {
+            color-scheme: light;
+            --color-base-100: #FFFDF9;            /* カードの背景（クリーム） */
+            --color-base-200: #FDF3E3;            /* 薄い面 */
+            --color-base-300: #EBD9C4;            /* 枠線 */
+            --color-base-content: #4A3B32;        /* 文字（ブラウン） */
+            --color-primary: #E67E22;             /* メインのオレンジ */
+            --color-primary-content: #FFFFFF;
+            --color-secondary: #34495E;           /* 管理者メニューのネイビー */
+            --color-secondary-content: #FFFFFF;
+            --color-accent: #D9534F;              /* 強調の赤 */
+            --color-accent-content: #FFFFFF;
+            --color-neutral: #4A3B32;
+            --color-neutral-content: #FDF6E3;
+            --color-info: #2E86C1;
+            --color-info-content: #FFFFFF;
+            --color-success: #1E8E4E;
+            --color-success-content: #FFFFFF;
+            --color-warning: #F5B041;
+            --color-warning-content: #4A2E05;
+            --color-error: #C0392B;
+            --color-error-content: #FFFFFF;
+            --radius-selector: 1rem;
+            --radius-field: 0.9rem;
+            --radius-box: 1.25rem;
+            --size-selector: 0.25rem;
+            --size-field: 0.25rem;
+            --border: 1px;
+            --depth: 1;
+            --noise: 0;
+            --app-bg: linear-gradient(180deg, #F9EBE0 0%, #F5E1D3 50%, #E8D3C3 100%);
+        }
+        [data-theme="bentodark"] {
+            color-scheme: dark;
+            --color-base-100: #2A2420;
+            --color-base-200: #231C17;
+            --color-base-300: #4A3F38;
+            --color-base-content: #F1E6DC;
+            --color-primary: #F0933F;
+            --color-primary-content: #2A1A0A;
+            --color-secondary: #5D7A99;
+            --color-secondary-content: #FFFFFF;
+            --color-accent: #FF7B72;
+            --color-accent-content: #2A0D0B;
+            --color-neutral: #4A3F38;
+            --color-neutral-content: #F1E6DC;
+            --color-info: #5DADE2;
+            --color-info-content: #06202E;
+            --color-success: #4CC38A;
+            --color-success-content: #062A18;
+            --color-warning: #F5B041;
+            --color-warning-content: #3A2606;
+            --color-error: #FF6B5E;
+            --color-error-content: #2A0805;
+            --radius-selector: 1rem;
+            --radius-field: 0.9rem;
+            --radius-box: 1.25rem;
+            --size-selector: 0.25rem;
+            --size-field: 0.25rem;
+            --border: 1px;
+            --depth: 1;
+            --noise: 0;
+            --app-bg: linear-gradient(180deg, #1C1714 0%, #231C17 50%, #2B221B 100%);
+        }
+
         body {
-            background: linear-gradient(180deg, #F9EBE0 0%, #F5E1D3 50%, #E8D3C3 100%);
-            color: #4A3B32;
+            background: var(--app-bg);
+            color: var(--color-base-content);
             font-family: 'Noto Sans JP', sans-serif;
             min-height: 100vh;
             position: relative;
@@ -63,12 +113,40 @@
             overflow-x: hidden;
             -webkit-tap-highlight-color: transparent;
         }
-        /* 視認性の高いPopタイトルデザイン */
+
+        /* 画面の表示／非表示（JSが "hidden" クラスを付け外しします）。daisyUIのクラスより常に優先 */
+        .hidden { display: none; }
+
+        /* ---- 小さな補助クラス（テーマの色を参照するので、ダークモードにも自動対応） ---- */
+        .font-pop { font-family: 'Zen Maru Gothic', 'Noto Sans JP', sans-serif; }
+        .bg-b1 { background-color: var(--color-base-100); }
+        .bg-soft { background-color: var(--color-base-200); }
+        .bg-ok { background-color: var(--color-success); color: var(--color-success-content); }
+        .c-primary { color: var(--color-primary); }
+        .c-secondary { color: var(--color-secondary); }
+        .c-accent { color: var(--color-accent); }
+        .c-error { color: var(--color-error); }
+        .c-success { color: var(--color-success); }
+        .c-muted { color: color-mix(in oklab, var(--color-base-content) 62%, transparent); }
+        .c-faint { color: color-mix(in oklab, var(--color-base-content) 45%, transparent); }
+        .bd { border: 1px solid var(--color-base-300); }
+        .bd-t { border-top: 1px solid var(--color-base-300); }
+        .bd-b-dashed { border-bottom: 2px dashed var(--color-base-300); }
+        .dot { display: inline-block; width: 0.5rem; height: 0.5rem; border-radius: 9999px; }
+        .dot-primary { background: var(--color-primary); }
+        .dot-success { background: var(--color-success); }
+        .row-delivered { background: color-mix(in oklab, var(--color-success) 12%, transparent); }
+        .note-warn { background: color-mix(in oklab, var(--color-warning) 16%, var(--color-base-100)); border: 1px solid color-mix(in oklab, var(--color-warning) 45%, transparent); }
+        .price-panel { border: 1px solid color-mix(in oklab, var(--color-primary) 30%, transparent); }
+        .ticket-card { border-style: dashed; border-width: 2px; }
+
+        /* ---- 以下は元のデザインをそのまま引き継ぎ（アニメーション・ブタ・バラン・印刷） ---- */
+/* 視認性の高いPopタイトルデザイン */
         .pop-title {
             font-family: 'Zen Maru Gothic', 'Noto Sans JP', sans-serif;
             font-weight: 900;
-            color: #C0392B;
-            -webkit-text-stroke: 2px #ffffff;
+            color: var(--color-error);
+            -webkit-text-stroke: 2px var(--color-base-100);
             paint-order: stroke fill;
             letter-spacing: -0.01em;
             filter: drop-shadow(0px 3px 6px rgba(139, 69, 19, 0.2));
@@ -158,8 +236,9 @@
         /* 吹き出しスタイル */
         .pig-speech-bubble {
             position: relative;
-            background: #ffffff;
-            border: 2px solid #FCD5D6;
+            background: var(--color-base-100);
+            color: var(--color-base-content);
+            border: 2px solid color-mix(in oklab, var(--color-accent) 35%, var(--color-base-100));
             box-shadow: 0 4px 12px rgba(0,0,0,0.12);
         }
         .pig-speech-bubble::after {
@@ -171,7 +250,7 @@
             height: 0;
             border-left: 8px solid transparent;
             border-right: 8px solid transparent;
-            border-top: 9px solid #ffffff;
+            border-top: 9px solid var(--color-base-100);
         }
         .pig-speech-bubble::before {
             content: '';
@@ -182,7 +261,7 @@
             height: 0;
             border-left: 9px solid transparent;
             border-right: 9px solid transparent;
-            border-top: 10px solid #FCD5D6;
+            border-top: 10px solid color-mix(in oklab, var(--color-accent) 35%, var(--color-base-100));
         }
         /* 紙吹雪パーティクル CSS */
         .confetti-particle {
@@ -199,8 +278,8 @@
 
         /* 並び替え可能な見出し */
         th[data-sort] { cursor: pointer; user-select: none; white-space: nowrap; }
-        th[data-sort]:hover { background: #e7e5e4; }
-        .sort-ind { color: #D9534F; margin-left: 2px; }
+        th[data-sort]:hover { background: var(--color-base-300); }
+        .sort-ind { color: var(--color-accent); margin-left: 2px; }
 
         /* ==================== 印刷用 ==================== */
         #printArea { display: none; }
@@ -239,104 +318,7 @@
             #printArea .total-row td { font-weight: 900; background: #f5f5f5; }
         }
 
-        /* ==================== 共通：丸いアイコンボタン ==================== */
-        .icon-btn {
-            width: 2.25rem; height: 2.25rem; border-radius: 9999px;
-            background: rgba(255,255,255,0.85); border: 2px solid #ffffff;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1rem; line-height: 1; cursor: pointer;
-            transition: transform 0.15s;
-        }
-        .icon-btn:active { transform: scale(0.9); }
-
-        /* ==================== ダークモード ==================== */
-        html.dark { color-scheme: dark; }
-        html.dark body {
-            background: linear-gradient(180deg, #1c1714 0%, #231c17 50%, #2b221b 100%);
-            color: #f1e6dc;
-        }
-        html.dark .pop-title {
-            color: #ff8a7a;
-            -webkit-text-stroke: 2px #1c1714;
-            filter: drop-shadow(0px 3px 8px rgba(0,0,0,0.5));
-        }
-        html.dark .icon-btn { background: rgba(60,50,45,0.9); border-color: #4a403a; }
-
-        /* 背景色 */
-        html.dark .bg-appWarmBg { background-color: #2a2420 !important; }
-        html.dark .bg-white { background-color: #2f2926 !important; }
-        html.dark .bg-white\/90 { background-color: rgba(47,41,38,0.9) !important; }
-        html.dark .focus\:bg-white:focus { background-color: #2f2926 !important; }
-        html.dark .bg-stone-50 { background-color: #332c28 !important; }
-        html.dark .bg-stone-100 { background-color: #3a322d !important; }
-        html.dark .bg-stone-200 { background-color: #4a403a !important; }
-        html.dark .bg-stone-200\/80 { background-color: rgba(74,64,58,0.8) !important; }
-        html.dark .bg-stone-800 { background-color: #5a4a40 !important; }
-        html.dark .hover\:bg-stone-900:hover { background-color: #6a5849 !important; }
-        html.dark .hover\:bg-stone-50:hover { background-color: #3a322d !important; }
-        html.dark .hover\:bg-stone-200:hover { background-color: #554a43 !important; }
-        html.dark .hover\:bg-stone-300:hover { background-color: #5f534b !important; }
-        html.dark .bg-amber-50,
-        html.dark .bg-amber-50\/80 { background-color: #3b2e1a !important; }
-        html.dark .bg-amber-100,
-        html.dark .bg-amber-100\/90 { background-color: #4d3919 !important; }
-        html.dark .bg-orange-100 { background-color: #4f301b !important; }
-        html.dark .bg-emerald-50 { background-color: #12342b !important; }
-        html.dark .bg-emerald-50\/50 { background-color: rgba(16,185,129,0.12) !important; }
-        html.dark .bg-rose-50 { background-color: #3d1f25 !important; }
-        html.dark .hover\:bg-rose-100:hover { background-color: #52272f !important; }
-        html.dark .from-amber-50 {
-            --tw-gradient-from: #3b2e1a var(--tw-gradient-from-position) !important;
-            --tw-gradient-to: rgb(59 46 26 / 0) var(--tw-gradient-to-position) !important;
-            --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
-        }
-        html.dark .from-stone-50 {
-            --tw-gradient-from: #332c28 var(--tw-gradient-from-position) !important;
-            --tw-gradient-to: rgb(51 44 40 / 0) var(--tw-gradient-to-position) !important;
-            --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
-        }
-        html.dark .to-orange-50 { --tw-gradient-to: #402b19 var(--tw-gradient-to-position) !important; }
-        html.dark .to-amber-50\/50 { --tw-gradient-to: rgb(59 46 26 / 0.5) var(--tw-gradient-to-position) !important; }
-
-        /* 文字色 */
-        html.dark .text-stone-900,
-        html.dark .text-stone-800 { color: #f5efe9 !important; }
-        html.dark .text-stone-700 { color: #e7ddd3 !important; }
-        html.dark .text-stone-600 { color: #d3c7bc !important; }
-        html.dark .text-stone-500 { color: #b3a69a !important; }
-        html.dark .text-stone-400 { color: #9a8d82 !important; }
-        html.dark .hover\:text-stone-900:hover { color: #ffffff !important; }
-        html.dark .text-amber-900 { color: #fde3a7 !important; }
-        html.dark .text-amber-800 { color: #f8cf7a !important; }
-        html.dark .text-orange-900 { color: #fdba74 !important; }
-        html.dark .text-appAccentRed { color: #ff7b72 !important; }
-        html.dark .text-rose-700,
-        html.dark .text-rose-600 { color: #fda4af !important; }
-        html.dark .hover\:text-rose-700:hover { color: #fecdd3 !important; }
-        html.dark .text-emerald-800,
-        html.dark .text-emerald-600 { color: #6ee7b7 !important; }
-        html.dark ::placeholder { color: #8a7d72 !important; }
-
-        /* 枠線 */
-        html.dark .border-stone-100,
-        html.dark .border-stone-200 { border-color: #4a403a !important; }
-        html.dark .border-stone-300 { border-color: #5a4e46 !important; }
-        html.dark .border-orange-100 { border-color: #4a3827 !important; }
-        html.dark .border-orange-200 { border-color: #7a4a25 !important; }
-        html.dark .border-amber-200,
-        html.dark .border-amber-300,
-        html.dark .border-amber-300\/80 { border-color: #6b4d22 !important; }
-        html.dark .border-rose-200 { border-color: #7f2a3a !important; }
-        html.dark .border-emerald-200 { border-color: #1f6b4f !important; }
-        html.dark .divide-stone-100 > :not([hidden]) ~ :not([hidden]) { border-color: #3f3631 !important; }
-
-        /* ブタの吹き出し・表の見出し */
-        html.dark .pig-speech-bubble { background: #2f2926; border-color: #6b4350; }
-        html.dark .pig-speech-bubble::after { border-top-color: #2f2926; }
-        html.dark .pig-speech-bubble::before { border-top-color: #6b4350; }
-        html.dark th[data-sort]:hover { background: #4a403a; }
-        html.dark .balan-leaf { filter: brightness(0.8) drop-shadow(0px -3px 4px rgba(0,0,0,0.4)); }
+        
     </style>
 </head>
 <body class="px-3 sm:px-4 py-4 md:py-6 flex flex-col items-center">
@@ -357,13 +339,13 @@
         title="タップしてね！"
     >
         <!-- 吹き出しメッセージ（動的に変更可能） -->
-        <div id="pigSpeech" class="pig-speech-bubble bg-white text-stone-800 text-[11px] sm:text-xs font-black px-3 py-1.5 rounded-2xl mb-1.5 transition-all duration-300 max-w-[150px] text-center leading-tight">
-            ブヒッ！予約は前日13時〜21時<br><span class="text-appAccentRed font-black">忘れずに予約だブ！🐷</span>
+        <div id="pigSpeech" class="pig-speech-bubble text-[11px] sm:text-xs font-black px-3 py-1.5 rounded-2xl mb-1.5 transition-all duration-300 max-w-[150px] text-center leading-tight">
+            ブヒッ！予約は前日13時〜21時<br><span class="c-accent font-black">忘れずに予約だブ！🐷</span>
         </div>
 
         <!-- ブタのSVGイラスト (跳ねるアニメーション付) -->
         <div id="pigSvgWrapper" class="pig-bounce-spring flex items-center justify-center">
-            <svg class="w-20 h-20 sm:w-24 sm:h-24 filter drop-shadow-md transition-transform duration-150 group-active:scale-110" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg class="w-20 h-20 sm:w-24 sm:h-24 drop-shadow-md transition-transform duration-150 group-active:scale-110" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <!-- 耳 -->
                 <path d="M30 38C22 25 35 15 42 28Z" fill="#F7C6C7" stroke="#EEB4B5" stroke-width="2"/>
                 <path d="M90 38C98 25 85 15 78 28Z" fill="#F7C6C7" stroke="#EEB4B5" stroke-width="2"/>
@@ -394,21 +376,21 @@
     </div>
 
     <!-- メインコンテンツ容器 -->
-    <div id="appContainer" class="w-full max-w-xl mx-auto space-y-4 z-20 relative">
+    <div id="appContainer" class="w-full max-w-xl mx-auto flex flex-col gap-4 z-20 relative">
 
         <!-- ヘッダーエリア -->
         <header class="relative text-center pt-1 pb-1">
             <div class="flex justify-between items-center mb-2 gap-2">
                 <div class="flex items-center gap-1.5">
-                    <button type="button" id="soundToggleBtn" class="icon-btn" onclick="toggleSound()" aria-label="効果音のオン/オフ" title="効果音のオン/オフ">🔊</button>
-                    <button type="button" id="themeToggleBtn" class="icon-btn" onclick="toggleTheme()" aria-label="ダークモードの切り替え" title="ダークモードの切り替え">🌙</button>
-                    <button type="button" id="installBtn" class="hidden px-3 h-9 text-[11px] font-black text-amber-900 bg-amber-100 border-2 border-amber-300 rounded-full shadow-md cursor-pointer active:scale-95 whitespace-nowrap" onclick="installApp()">📲 アプリにする</button>
+                    <button type="button" id="soundToggleBtn" class="btn btn-circle btn-sm shadow-md" onclick="toggleSound()" aria-label="効果音のオン/オフ" title="効果音のオン/オフ">🔊</button>
+                    <button type="button" id="themeToggleBtn" class="btn btn-circle btn-sm shadow-md" onclick="toggleTheme()" aria-label="ダークモードの切り替え" title="ダークモードの切り替え">🌙</button>
+                    <button type="button" id="installBtn" class="hidden btn btn-sm btn-warning btn-soft rounded-full font-black" onclick="installApp()">📲 アプリにする</button>
                 </div>
                 <button
                     type="button"
                     onclick="toggleAdminView()"
                     id="adminSwitchBtn"
-                    class="px-3.5 py-1.5 text-xs font-black text-white bg-appNavyAccent hover:bg-slate-700 active:scale-95 rounded-full transition-all duration-200 shadow-md border-2 border-white flex items-center gap-1 cursor-pointer"
+                    class="btn btn-sm btn-secondary rounded-full font-black shadow-md"
                 >
                     <span>⚙️</span> 管理者メニュー
                 </button>
@@ -416,7 +398,7 @@
 
             <div class="flex justify-center items-center gap-2 mb-1">
                 <span class="text-xl animate-bounce">🍱</span>
-                <span class="text-[11px] sm:text-xs font-black text-amber-900 bg-amber-100/90 px-3 py-0.5 rounded-full border border-amber-300 shadow-xs">学食＆購買のおいしい予約</span>
+                <span class="badge badge-warning badge-soft font-black">学食＆購買のおいしい予約</span>
                 <span class="text-xl animate-bounce" style="animation-delay: 0.5s;">🍙</span>
             </div>
 
@@ -425,315 +407,322 @@
             </h1>
 
             <div class="flex items-center justify-center gap-2 mt-2">
-                <div class="inline-flex items-center gap-1 px-3.5 py-1 text-xs font-black text-stone-800 bg-amber-100 rounded-full shadow-xs border border-amber-300/80 pulse-badge">
-                    <span>⏰</span> 予約受付: <strong class="text-appAccentRed font-black text-sm sm:text-base underline">前日 13:00〜21:00</strong>
+                <div class="badge badge-warning badge-soft badge-lg gap-1 font-black pulse-badge">
+                    <span>⏰</span> 予約受付: <strong class="c-accent text-sm sm:text-base underline">前日 13:00〜21:00</strong>
                 </div>
             </div>
-            <div class="mt-1.5 text-[11px] font-black text-stone-600">
-                🗑️ キャンセルのみ <span class="text-appAccentRed">当日 朝9:30</span> まで可能
+            <div class="mt-1.5 text-[11px] font-black c-muted">
+                🗑️ キャンセルのみ <span class="c-accent">当日 朝9:30</span> まで可能
             </div>
 
-            <div id="iosInstallTip" class="hidden mt-2 text-left text-[11px] font-black text-amber-900 bg-amber-50 border border-amber-200 rounded-2xl px-3 py-2 leading-relaxed relative pr-8">
-                📲 <strong>ホーム画面に追加できます</strong><br>
-                Safariの共有ボタン（□に↑）→「ホーム画面に追加」を選ぶと、アプリのように使えます。
-                <button type="button" onclick="dismissIosTip()" class="absolute top-1.5 right-2 text-stone-500 text-sm font-black cursor-pointer" aria-label="閉じる">✕</button>
+            <div id="iosInstallTip" class="hidden alert alert-warning alert-soft mt-2 text-left text-[11px] font-black leading-relaxed relative pr-9">
+                <div>
+                    📲 <strong>ホーム画面に追加できます</strong><br>
+                    Safariの共有ボタン（□に↑）→「ホーム画面に追加」を選ぶと、アプリのように使えます。
+                </div>
+                <button type="button" onclick="dismissIosTip()" class="btn btn-ghost btn-xs btn-circle absolute top-1.5 right-1.5" aria-label="閉じる">✕</button>
             </div>
         </header>
 
         <!-- ==================== 生徒用 予約ビュー ==================== -->
-        <main id="studentView" class="space-y-4">
+        <main id="studentView" class="flex flex-col gap-4">
 
-            <div id="closedBanner" class="hidden bg-stone-100 border-2 border-amber-300 text-stone-800 p-3.5 rounded-3xl text-center text-xs sm:text-sm font-black shadow-md fade-in-up">
+            <div id="closedBanner" class="hidden alert alert-warning justify-center text-center text-xs sm:text-sm font-black shadow-md fade-in-up">
                 ⚠️ 予約受付は終了しました。
             </div>
 
-            <div class="bg-appWarmBg border-2 border-orange-100 rounded-3xl p-4 sm:p-6 shadow-xl space-y-4">
+            <div class="card bg-b1 card-border shadow-xl">
+                <div class="card-body p-4 sm:p-6 gap-4">
 
-                <!-- スマホ最適化タブボタン -->
-                <div class="grid grid-cols-2 gap-2 p-1 bg-stone-100 rounded-2xl text-xs sm:text-sm font-black">
-                    <button
-                        type="button"
-                        id="tabNewOrder"
-                        onclick="switchStudentTab('new')"
-                        class="py-2.5 px-2 rounded-xl bg-appWarmAmber text-white shadow-xs transition-all duration-200 flex items-center justify-center gap-1 cursor-pointer active:scale-95"
-                    >
-                        <span>🍱</span> 新規予約する
-                    </button>
-                    <button
-                        type="button"
-                        id="tabMyOrders"
-                        onclick="switchStudentTab('my')"
-                        class="py-2.5 px-2 rounded-xl text-stone-600 hover:text-stone-900 transition-all duration-200 flex items-center justify-center gap-1 cursor-pointer active:scale-95"
-                    >
-                        <span>🔍</span> 予約の確認・変更
-                    </button>
-                </div>
+                    <!-- スマホ最適化タブボタン -->
+                    <div class="join w-full bg-soft p-1 rounded-box text-xs sm:text-sm font-black">
+                        <button
+                            type="button"
+                            id="tabNewOrder"
+                            onclick="switchStudentTab('new')"
+                            class="btn join-item flex-1 btn-primary"
+                        >
+                            <span>🍱</span> 新規予約する
+                        </button>
+                        <button
+                            type="button"
+                            id="tabMyOrders"
+                            onclick="switchStudentTab('my')"
+                            class="btn join-item flex-1 btn-ghost"
+                        >
+                            <span>🔍</span> 予約の確認・変更
+                        </button>
+                    </div>
 
-                <!-- 【タブ1】予約入力フォーム -->
-                <div id="reservationCard" class="space-y-4">
+                    <!-- 【タブ1】予約入力フォーム -->
+                    <div id="reservationCard" class="flex flex-col gap-4">
 
-                    <div id="statusMessage" class="hidden p-3.5 rounded-2xl text-xs sm:text-sm font-black border-2"></div>
+                        <div id="statusMessage" class="hidden alert alert-error alert-soft text-xs sm:text-sm font-black"></div>
 
-                    <form id="reservationForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
+                        <form id="reservationForm" onsubmit="handleFormSubmit(event)" class="flex flex-col gap-4">
 
-                        <div id="targetDateNote" class="hidden text-xs font-black text-amber-900 bg-amber-50 border border-amber-200 rounded-2xl px-3.5 py-2"></div>
+                            <div id="targetDateNote" class="hidden alert alert-warning alert-soft text-xs font-black py-2"></div>
 
-                        <div class="space-y-1">
-                            <label class="block text-xs font-black text-stone-700 flex items-center gap-1" for="studentId">
-                                <span class="w-2 h-2 rounded-full bg-appWarmAmber"></span> 生徒番号 <span class="text-[10px] font-normal text-stone-500">(半角数字 4桁)</span>
-                            </label>
-                            <input
-                                type="number"
-                                id="studentId"
-                                inputmode="numeric"
-                                class="w-full px-4 py-3 bg-stone-50 border-2 border-stone-200 rounded-2xl text-base sm:text-lg font-black text-stone-800 placeholder-stone-400 outline-none transition-all duration-200 focus:border-appWarmAmber focus:bg-white focus:ring-2 focus:ring-amber-200"
-                                placeholder="例: 1101 (1年1組1番)"
-                                required
-                                min="1000"
-                                max="9999"
-                            >
-                        </div>
+                            <fieldset class="fieldset">
+                                <legend class="fieldset-legend text-xs font-black">
+                                    <span class="dot dot-primary"></span> 生徒番号 <span class="text-[10px] font-normal c-muted">(半角数字 4桁)</span>
+                                </legend>
+                                <input
+                                    type="number"
+                                    id="studentId"
+                                    inputmode="numeric"
+                                    class="input input-lg w-full font-black"
+                                    placeholder="例: 1101 (1年1組1番)"
+                                    required
+                                    min="1000"
+                                    max="9999"
+                                >
+                            </fieldset>
 
-                        <div class="space-y-1">
-                            <label class="block text-xs font-black text-stone-700 flex items-center justify-between" for="productName">
-                                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-appWarmAmber"></span> 予約商品を選ぶ</span>
-                            </label>
-                            <div class="relative">
+                            <fieldset class="fieldset">
+                                <legend class="fieldset-legend text-xs font-black">
+                                    <span class="dot dot-primary"></span> 予約商品を選ぶ
+                                </legend>
                                 <select
                                     id="productName"
-                                    class="w-full px-4 py-3 bg-stone-50 border-2 border-stone-200 rounded-2xl text-sm sm:text-base font-black text-stone-800 outline-none transition-all duration-200 focus:border-appWarmAmber focus:bg-white focus:ring-2 focus:ring-amber-200 appearance-none cursor-pointer pr-10 truncate"
+                                    class="select select-lg w-full font-black"
                                     onchange="updatePricePreview()"
                                     required
                                 >
                                     <option value="">メニューを選択してください</option>
                                 </select>
-                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-stone-400">
-                                    <svg class="w-5 h-5 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+                            </fieldset>
+
+                            <fieldset class="fieldset">
+                                <legend class="fieldset-legend text-xs font-black">
+                                    <span class="dot dot-primary"></span> 注文個数
+                                </legend>
+                                <div class="flex items-center gap-3">
+                                    <input
+                                        type="number"
+                                        id="quantity"
+                                        inputmode="numeric"
+                                        class="input input-lg w-full font-black"
+                                        value="1"
+                                        min="1"
+                                        max="5"
+                                        onchange="updatePricePreview()"
+                                        oninput="updatePricePreview()"
+                                        required
+                                    >
+                                    <span class="text-sm font-black c-muted whitespace-nowrap">個</span>
+                                </div>
+                            </fieldset>
+
+                            <!-- 合計金額リアルタイム表示 -->
+                            <div class="stats w-full bg-soft price-panel">
+                                <div class="stat px-4 py-3">
+                                    <div class="stat-title text-xs font-bold">昼休みにお支払いいただく合計</div>
+                                    <div id="pricePreview" class="stat-value c-accent font-pop text-3xl sm:text-4xl tracking-tight transition-transform duration-200">¥0</div>
+                                    <div class="stat-desc font-bold">※購買窓口でお渡し</div>
                                 </div>
                             </div>
-                        </div>
 
-                        <div class="space-y-1">
-                            <label class="block text-xs font-black text-stone-700 flex items-center gap-1" for="quantity">
-                                <span class="w-2 h-2 rounded-full bg-appWarmAmber"></span> 注文個数
+                            <!-- 光る確定ボタン -->
+                            <button
+                                type="submit"
+                                id="submitBtn"
+                                data-sfx="none"
+                                class="btn btn-primary btn-lg w-full btn-shine-effect font-black tracking-wide text-base sm:text-lg"
+                            >
+                                <span>👍</span> この内容で予約を確定する！
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- 【タブ2】My予約確認・変更・削除カード -->
+                    <div id="myOrdersCard" class="hidden flex flex-col gap-4 fade-in-up">
+                        <div class="rounded-box bg-soft bd p-3.5 flex flex-col gap-2">
+                            <label class="text-xs font-black" for="myStudentIdInput">
+                                自分の生徒番号を入力して検索
                             </label>
-                            <div class="flex items-center gap-3">
+                            <div class="join w-full">
                                 <input
                                     type="number"
-                                    id="quantity"
+                                    id="myStudentIdInput"
                                     inputmode="numeric"
-                                    class="w-full px-4 py-3 bg-stone-50 border-2 border-stone-200 rounded-2xl text-base sm:text-lg font-black text-stone-800 outline-none transition-all duration-200 focus:border-appWarmAmber focus:bg-white focus:ring-2 focus:ring-amber-200"
-                                    value="1"
-                                    min="1"
-                                    max="5"
-                                    onchange="updatePricePreview()"
-                                    oninput="updatePricePreview()"
-                                    required
+                                    class="input join-item w-full font-black"
+                                    placeholder="生徒番号 (4桁)"
+                                    min="1000"
+                                    max="9999"
                                 >
-                                <span class="text-sm font-black text-stone-600 whitespace-nowrap">個</span>
+                                <button
+                                    type="button"
+                                    onclick="searchMyOrders()"
+                                    class="btn btn-primary join-item font-black whitespace-nowrap"
+                                >
+                                    検索する
+                                </button>
                             </div>
                         </div>
 
-                        <!-- 合計金額リアルタイム表示（ポップなアニメーション） -->
-                        <div class="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl px-4 py-3 flex justify-between items-center shadow-xs">
-                            <div class="space-y-0.5">
-                                <span class="text-xs font-bold text-stone-600 block">昼休みにお支払いいただく合計</span>
-                                <span class="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full">※購買窓口でお渡し</span>
+                        <!-- 通知（リマインド） -->
+                        <div id="pushCard" class="hidden note-warn rounded-box p-3.5 flex flex-col gap-2 text-left">
+                            <div class="font-black text-xs sm:text-sm flex items-center gap-1">🔔 通知でお知らせ</div>
+                            <p class="text-[11px] font-bold leading-relaxed">
+                                上の生徒番号で、<strong>前日20時の「予約しわすれ」</strong>と<strong>当日朝の「今日のお弁当」</strong>をお知らせします。
+                            </p>
+                            <div id="pushStatus" class="text-[11px] font-black c-muted"></div>
+                            <div class="flex gap-2">
+                                <button type="button" id="pushOnBtn" onclick="enablePush()" class="btn btn-primary btn-sm flex-1 font-black">🔔 通知をオンにする</button>
+                                <button type="button" id="pushOffBtn" onclick="disablePush()" class="hidden btn btn-sm font-black">オフにする</button>
                             </div>
-                            <span id="pricePreview" class="text-2xl sm:text-3xl font-black text-appAccentRed font-pop tracking-tight transition-all duration-200">¥0</span>
                         </div>
 
-                        <!-- 光る確定ボタン -->
-                        <button
-                            type="submit"
-                            id="submitBtn"
-                            data-sfx="none"
-                            class="btn-shine-effect w-full py-3.5 px-5 bg-gradient-to-r from-appWarmAmber to-amber-600 hover:from-amber-600 hover:to-appWarmAmber active:scale-[0.98] text-white font-black rounded-2xl text-base sm:text-lg tracking-wide transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer border-2 border-white/60 flex items-center justify-center gap-2"
-                        >
-                            <span>👍</span> この内容で予約を確定する！
-                        </button>
-                    </form>
-                </div>
+                        <div id="myOrdersStatus" class="hidden alert alert-soft text-xs font-black"></div>
 
-                <!-- 【タブ2】My予約確認・変更・削除カード -->
-                <div id="myOrdersCard" class="hidden space-y-4 fade-in-up">
-                    <div class="space-y-2 bg-stone-50 p-3.5 rounded-2xl border border-stone-200">
-                        <label class="block text-xs font-black text-stone-700" for="myStudentIdInput">
-                            自分の生徒番号を入力して検索
-                        </label>
-                        <div class="flex gap-2">
-                            <input
-                                type="number"
-                                id="myStudentIdInput"
-                                inputmode="numeric"
-                                class="w-full px-3.5 py-2.5 bg-white border-2 border-stone-200 rounded-xl text-base font-black outline-none focus:border-appWarmAmber"
-                                placeholder="生徒番号 (4桁)"
-                                min="1000"
-                                max="9999"
-                            >
+                        <div id="myOrdersResult" class="flex flex-col gap-3">
+                            <p class="text-xs c-faint text-center py-6 font-bold">生徒番号を入力して「検索する」を押してください</p>
+                        </div>
+                    </div>
+
+                    <!-- 予約完了チケット (レシート風 + 紙吹雪演出発生) -->
+                    <div id="completionCard" class="hidden card card-border bg-soft fade-in-up ticket-card">
+                        <div class="card-body p-5 gap-4">
+                            <div class="text-center pb-3 bd-b-dashed">
+                                <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-ok text-2xl font-black mb-1 shadow-md animate-bounce">
+                                    ✓
+                                </div>
+                                <h2 class="text-xl sm:text-2xl font-black font-pop">予約が完了しました！</h2>
+                                <p class="text-xs c-muted font-bold mt-0.5">昼休みに購買窓口でこちらの確認画面をお見せください</p>
+                            </div>
+
+                            <div class="rounded-box bg-b1 bd p-4 flex flex-col gap-2.5 text-xs sm:text-sm font-bold shadow-xs">
+                                <div class="flex justify-between items-center py-0.5">
+                                    <span class="c-muted">生徒番号</span>
+                                    <span id="resStudentId" class="font-black c-primary text-lg sm:text-xl">-</span>
+                                </div>
+                                <div class="flex justify-between items-center py-0.5 bd-t">
+                                    <span class="c-muted">受け取り日</span>
+                                    <span id="resPickupDate" class="font-black">-</span>
+                                </div>
+                                <div class="flex justify-between items-center py-0.5 bd-t">
+                                    <span class="c-muted">予約商品</span>
+                                    <span id="resProductName" class="font-black">-</span>
+                                </div>
+                                <div class="flex justify-between items-center py-0.5 bd-t">
+                                    <span class="c-muted">注文個数</span>
+                                    <span id="resQuantity" class="font-black">-</span>
+                                </div>
+                                <div class="flex justify-between items-center py-1.5 bd-t pt-2">
+                                    <span>お支払合計</span>
+                                    <span id="resTotalPrice" class="text-2xl sm:text-3xl font-black c-accent font-pop">-</span>
+                                </div>
+                                <div class="flex justify-between items-center py-0.5 bd-t text-[11px] c-faint font-normal pt-1.5">
+                                    <span>受付日時</span>
+                                    <span id="resTime">-</span>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-warning alert-soft alert-horizontal items-start text-xs leading-relaxed font-bold">
+                                <span class="text-base">📢</span>
+                                <div>
+                                    <strong>受け取り方法:</strong> 昼休みに購買窓口で生徒番号 <strong id="noticeStudentId" class="c-primary text-sm font-black underline">-</strong> をお伝えいただき、代金とお引き換えください。
+                                </div>
+                            </div>
+
                             <button
                                 type="button"
-                                onclick="searchMyOrders()"
-                                class="px-5 py-2.5 bg-appWarmAmber hover:bg-amber-600 active:scale-95 text-white font-black text-xs sm:text-sm rounded-xl transition-all cursor-pointer shadow-xs whitespace-nowrap"
+                                class="btn btn-neutral w-full font-black"
+                                onclick="resetToNewReservation()"
                             >
-                                検索する
+                                追加で予約する / フォームに戻る
                             </button>
                         </div>
                     </div>
 
-                    <!-- 通知（リマインド） -->
-                    <div id="pushCard" class="hidden bg-amber-50 border border-amber-200 rounded-2xl p-3.5 space-y-2">
-                        <div class="font-black text-xs sm:text-sm text-stone-800 flex items-center gap-1">🔔 通知でお知らせ</div>
-                        <p class="text-[11px] font-bold text-stone-600 leading-relaxed">
-                            上の生徒番号で、<strong>前日20時の「予約しわすれ」</strong>と<strong>当日朝の「今日のお弁当」</strong>をお知らせします。
-                        </p>
-                        <div id="pushStatus" class="text-[11px] font-black text-stone-600"></div>
-                        <div class="flex gap-2">
-                            <button type="button" id="pushOnBtn" onclick="enablePush()" class="flex-1 py-2 bg-appWarmAmber hover:bg-amber-600 active:scale-95 text-white font-black text-xs rounded-xl cursor-pointer shadow-xs">🔔 通知をオンにする</button>
-                            <button type="button" id="pushOffBtn" onclick="disablePush()" class="hidden px-3 py-2 bg-stone-200 hover:bg-stone-300 text-stone-700 font-black text-xs rounded-xl cursor-pointer">オフにする</button>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 bd-t">
+                        <div id="infoCard" class="card card-border bg-soft">
+                            <div class="card-body p-3 gap-1.5 text-xs">
+                                <h3 class="card-title text-sm gap-1.5">
+                                    <span class="dot dot-primary"></span> ご利用上の注意
+                                </h3>
+                                <ul class="flex flex-col gap-1 pl-1 font-medium leading-relaxed text-[11px]">
+                                    <li>• 予約・個数変更は<strong class="c-accent font-black">前日 13:00〜21:00</strong>。</li>
+                                    <li>• キャンセルのみ<strong class="c-accent font-black">当日 朝9:30</strong>まで可能です。</li>
+                                    <li>• 代金引換と商品の受け渡しは<strong class="font-black">昼休みに購買窓口</strong>で行います。</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div id="rankingCard" class="hidden card card-border bg-soft">
+                            <div class="card-body p-3 gap-2 text-xs">
+                                <h3 class="card-title text-sm gap-1.5">
+                                    <span>🔥</span> 予約人気 TOP 3
+                                </h3>
+                                <div id="rankingList" class="grid grid-cols-3 gap-1.5 text-center"></div>
+                            </div>
                         </div>
                     </div>
 
-                    <div id="myOrdersStatus" class="hidden text-xs font-black p-3 rounded-xl border-2"></div>
-
-                    <div id="myOrdersResult" class="space-y-3">
-                        <p class="text-xs text-stone-400 text-center py-6 font-bold">生徒番号を入力して「検索する」を押してください</p>
-                    </div>
                 </div>
-
-                <!-- 予約完了チケット (レシート風 + 紙吹雪演出発生) -->
-                <div id="completionCard" class="hidden bg-gradient-to-b from-stone-50 to-amber-50/50 border-2 border-amber-200 rounded-3xl p-5 fade-in-up space-y-4 shadow-xs">
-                    <div class="text-center pb-3 border-b-2 border-dashed border-amber-200">
-                        <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500 text-white text-2xl font-black mb-1 shadow-md animate-bounce">
-                            ✓
-                        </div>
-                        <h2 class="text-xl sm:text-2xl font-black text-stone-800 font-pop">予約が完了しました！</h2>
-                        <p class="text-xs text-stone-600 font-bold mt-0.5">昼休みに購買窓口でこちらの確認画面をお見せください</p>
-                    </div>
-
-                    <div class="space-y-2.5 bg-white p-4 rounded-2xl border border-stone-200 text-xs sm:text-sm font-bold shadow-xs">
-                        <div class="flex justify-between items-center py-0.5">
-                            <span class="text-stone-500">生徒番号</span>
-                            <span id="resStudentId" class="font-black text-appWarmAmber text-lg sm:text-xl">-</span>
-                        </div>
-                        <div class="flex justify-between items-center py-0.5 border-t border-stone-100">
-                            <span class="text-stone-500">受け取り日</span>
-                            <span id="resPickupDate" class="text-stone-800 font-black">-</span>
-                        </div>
-                        <div class="flex justify-between items-center py-0.5 border-t border-stone-100">
-                            <span class="text-stone-500">予約商品</span>
-                            <span id="resProductName" class="text-stone-800 font-black">-</span>
-                        </div>
-                        <div class="flex justify-between items-center py-0.5 border-t border-stone-100">
-                            <span class="text-stone-500">注文個数</span>
-                            <span id="resQuantity" class="text-stone-800 font-black">-</span>
-                        </div>
-                        <div class="flex justify-between items-center py-1.5 border-t-2 border-stone-100 pt-2">
-                            <span class="text-stone-700">お支払合計</span>
-                            <span id="resTotalPrice" class="text-2xl sm:text-3xl font-black text-appAccentRed font-pop">-</span>
-                        </div>
-                        <div class="flex justify-between items-center py-0.5 border-t border-stone-100 text-[11px] text-stone-400 font-normal pt-1.5">
-                            <span>受付日時</span>
-                            <span id="resTime">-</span>
-                        </div>
-                    </div>
-
-                    <div class="bg-amber-50/80 border border-amber-200 rounded-2xl p-3 text-xs text-stone-700 leading-relaxed font-bold flex items-start gap-2">
-                        <span class="text-base">📢</span>
-                        <div>
-                            <strong>受け取り方法:</strong> 昼休みに購買窓口で生徒番号 <strong id="noticeStudentId" class="text-appWarmAmber text-sm font-black underline">-</strong> をお伝えいただき、代金とお引き換えください。
-                        </div>
-                    </div>
-
-                    <button
-                        type="button"
-                        class="w-full py-3.5 px-5 bg-stone-800 hover:bg-stone-900 text-white font-black rounded-2xl text-xs sm:text-sm transition-all duration-200 cursor-pointer shadow-md active:scale-95"
-                        onclick="resetToNewReservation()"
-                    >
-                        追加で予約する / フォームに戻る
-                    </button>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-stone-200">
-                    <div id="infoCard" class="bg-stone-50 border border-stone-200 rounded-2xl p-3 text-xs text-stone-600 space-y-1.5">
-                        <h3 class="font-black text-stone-800 flex items-center gap-1">
-                            <span class="w-2 h-2 rounded-full bg-appWarmAmber"></span> ご利用上の注意
-                        </h3>
-                        <ul class="space-y-1 pl-1 font-medium leading-relaxed text-[11px]">
-                            <li>• 予約・個数変更は<strong class="text-appAccentRed font-black">前日 13:00〜21:00</strong>。</li>
-                            <li>• キャンセルのみ<strong class="text-appAccentRed font-black">当日 朝9:30</strong>まで可能です。</li>
-                            <li>• 代金引換と商品の受け渡しは<strong class="text-stone-800 font-black">昼休みに購買窓口</strong>で行います。</li>
-                        </ul>
-                    </div>
-
-                    <div id="rankingCard" class="hidden bg-stone-50 border border-amber-200 rounded-2xl p-3 text-xs space-y-2">
-                        <h3 class="font-black text-stone-800 flex items-center gap-1">
-                            <span>🔥</span> 予約人気 TOP 3
-                        </h3>
-                        <div id="rankingList" class="grid grid-cols-3 gap-1.5 text-center"></div>
-                    </div>
-                </div>
-
             </div>
 
         </main>
 
         <!-- ==================== 管理者専用 ビュー ==================== -->
-        <section id="adminView" class="hidden space-y-4 fade-in-up">
+        <section id="adminView" class="hidden flex flex-col gap-4 fade-in-up">
 
-            <div id="adminLoginForm" class="bg-appWarmBg border-2 border-stone-200 rounded-3xl p-5 space-y-4 max-w-md mx-auto shadow-xl">
-                <div class="text-center space-y-1">
-                    <span class="text-3xl">🔐</span>
-                    <h2 class="text-lg font-black text-stone-800">管理者ログイン</h2>
-                    <p class="text-xs font-bold text-stone-500">購買スタッフ・教員用のパスワードを入力してください。</p>
-                </div>
-                <div class="space-y-1">
-                    <input
-                        type="password"
-                        id="adminPassInput"
-                        class="w-full px-4 py-2.5 bg-stone-50 border-2 border-stone-200 rounded-xl text-sm font-bold placeholder-stone-400 outline-none focus:border-appNavyAccent focus:bg-white"
-                        placeholder="パスワードを入力"
-                    >
-                    <div id="adminAuthError" class="hidden text-xs text-rose-600 font-bold pt-1"></div>
-                </div>
-                <div class="flex space-x-2">
-                    <button
-                        type="button"
-                        onclick="loginAdmin()"
-                        class="w-full py-2.5 bg-appNavyAccent hover:bg-slate-700 text-white font-black text-xs sm:text-sm rounded-xl transition-all cursor-pointer shadow-xs active:scale-95"
-                    >
-                        ログイン
-                    </button>
-                    <button
-                        type="button"
-                        onclick="toggleAdminView()"
-                        class="w-1/3 py-2.5 bg-stone-200 hover:bg-stone-300 text-stone-700 text-xs font-bold rounded-xl cursor-pointer"
-                    >
-                        戻る
-                    </button>
+            <div id="adminLoginForm" class="card bg-b1 card-border shadow-xl w-full max-w-md mx-auto">
+                <div class="card-body p-5 gap-4">
+                    <div class="text-center flex flex-col gap-1">
+                        <span class="text-3xl">🔐</span>
+                        <h2 class="text-lg font-black">管理者ログイン</h2>
+                        <p class="text-xs font-bold c-muted">購買スタッフ・教員用のパスワードを入力してください。</p>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <input
+                            type="password"
+                            id="adminPassInput"
+                            class="input w-full font-bold"
+                            placeholder="パスワードを入力"
+                        >
+                        <div id="adminAuthError" class="hidden text-xs c-error font-bold pt-1"></div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button
+                            type="button"
+                            onclick="loginAdmin()"
+                            class="btn btn-secondary flex-1 font-black"
+                        >
+                            ログイン
+                        </button>
+                        <button
+                            type="button"
+                            onclick="toggleAdminView()"
+                            class="btn btn-ghost w-1/3 font-bold"
+                        >
+                            戻る
+                        </button>
+                    </div>
                 </div>
             </div>
 
             <!-- 管理者ダッシュボード -->
-            <div id="adminDashboard" class="hidden space-y-4">
+            <div id="adminDashboard" class="hidden flex flex-col gap-4">
 
-                <div class="flex flex-wrap justify-between items-center bg-appWarmBg border-2 border-stone-200 p-3.5 rounded-3xl shadow-md gap-2">
-                    <div class="flex items-center space-x-2">
-                        <span class="w-3 h-3 rounded-full bg-emerald-500 animate-ping"></span>
-                        <span class="text-sm sm:text-base font-black text-stone-800">管理者管理パネル</span>
+                <div class="navbar bg-b1 bd rounded-box shadow-md min-h-0 px-3.5 py-2.5 gap-2 flex-wrap">
+                    <div class="flex items-center gap-2 flex-1">
+                        <span class="dot dot-success w-3 h-3 animate-ping"></span>
+                        <span class="text-sm sm:text-base font-black">管理者管理パネル</span>
                     </div>
-                    <div class="flex space-x-2">
+                    <div class="flex gap-2">
                         <button
                             type="button"
                             onclick="fetchAdminOrders()"
-                            class="px-3 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-black rounded-xl transition-colors cursor-pointer border border-stone-200 flex items-center gap-1 active:scale-95"
+                            class="btn btn-sm font-black"
                         >
                             🔄 同期
                         </button>
                         <button
                             type="button"
                             onclick="logoutAdmin()"
-                            class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-black rounded-xl transition-colors border border-rose-200 cursor-pointer"
+                            class="btn btn-sm btn-error btn-soft font-black"
                         >
                             ログアウト
                         </button>
@@ -741,12 +730,12 @@
                 </div>
 
                 <!-- 管理サブタブ -->
-                <div class="grid grid-cols-2 gap-2 p-1 bg-stone-200/80 rounded-2xl text-xs font-black">
+                <div class="join w-full bg-soft p-1 rounded-box text-xs font-black">
                     <button
                         type="button"
                         id="adminTabOrdersBtn"
                         onclick="switchAdminSubTab('orders')"
-                        class="py-2 px-2 rounded-xl bg-appNavyAccent text-white shadow-xs transition-all cursor-pointer"
+                        class="btn join-item flex-1 btn-secondary"
                     >
                         📋 受渡チェック
                     </button>
@@ -754,142 +743,150 @@
                         type="button"
                         id="adminTabProductsBtn"
                         onclick="switchAdminSubTab('products')"
-                        class="py-2 px-2 rounded-xl text-stone-600 hover:text-stone-900 transition-all cursor-pointer"
+                        class="btn join-item flex-1 btn-ghost"
                     >
                         🍱 メニュー・在庫管理
                     </button>
                 </div>
 
-                <div id="adminStatusAlert" class="hidden p-3 rounded-2xl text-xs font-black border-2 fade-in-up"></div>
+                <div id="adminStatusAlert" class="hidden alert alert-soft text-xs font-black fade-in-up"></div>
 
                 <!-- サブタブ1: リアルタイム受渡管理 -->
-                <div id="adminOrdersSection" class="space-y-4">
-                    <div class="bg-appWarmBg border-2 border-stone-200 rounded-3xl p-4 shadow-md space-y-2">
-                        <div class="flex items-center justify-between gap-2 flex-wrap">
-                            <h3 class="text-[11px] font-black text-stone-500 uppercase tracking-wider">商品別 予約・受渡進捗</h3>
-                            <label class="flex items-center gap-1 text-[11px] font-black text-stone-600">
-                                受け取り日
-                                <input
-                                    type="date"
-                                    id="adminDate"
-                                    onchange="fetchAdminOrders()"
-                                    class="px-2 py-1 bg-stone-50 border-2 border-stone-200 rounded-lg text-[11px] font-bold outline-none focus:border-appNavyAccent"
-                                >
-                            </label>
+                <div id="adminOrdersSection" class="flex flex-col gap-4">
+                    <div class="card bg-b1 card-border shadow-md">
+                        <div class="card-body p-4 gap-2">
+                            <div class="flex items-center justify-between gap-2 flex-wrap">
+                                <h3 class="text-[11px] font-black c-muted uppercase tracking-wider">商品別 予約・受渡進捗</h3>
+                                <label class="flex items-center gap-1 text-[11px] font-black c-muted">
+                                    受け取り日
+                                    <input
+                                        type="date"
+                                        id="adminDate"
+                                        onchange="fetchAdminOrders()"
+                                        class="input input-xs font-bold w-auto"
+                                    >
+                                </label>
+                            </div>
+                            <div id="summaryContainer" class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                <p class="text-xs c-faint col-span-full font-medium">読み込み中...</p>
+                            </div>
+                            <button
+                                type="button"
+                                onclick="printTodayOrders()"
+                                class="btn btn-secondary w-full mt-1 font-black"
+                            >
+                                🖨️ この日の予約を印刷する（商品別合計＋誰が何を注文）
+                            </button>
                         </div>
-                        <div id="summaryContainer" class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                            <p class="text-xs text-stone-400 col-span-full font-medium">読み込み中...</p>
-                        </div>
-                        <button
-                            type="button"
-                            onclick="printTodayOrders()"
-                            class="w-full mt-1 py-2.5 bg-appNavyAccent hover:bg-slate-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-xl transition-all cursor-pointer shadow-xs flex items-center justify-center gap-1.5"
-                        >
-                            🖨️ この日の予約を印刷する（商品別合計＋誰が何を注文）
-                        </button>
                     </div>
 
-                    <div class="bg-appWarmBg border-2 border-stone-200 rounded-3xl p-4 shadow-md space-y-3">
-                        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
-                            <h3 class="text-sm sm:text-base font-black text-stone-800">注文一覧</h3>
-                            <input
-                                type="text"
-                                id="orderSearchInput"
-                                onkeyup="filterOrders()"
-                                placeholder="生徒番号または商品名で検索"
-                                class="px-3 py-1.5 bg-stone-50 border-2 border-stone-200 rounded-xl text-xs font-bold w-full sm:w-56 outline-none focus:border-appNavyAccent focus:bg-white"
-                            >
-                        </div>
+                    <div class="card bg-b1 card-border shadow-md">
+                        <div class="card-body p-4 gap-3">
+                            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+                                <h3 class="card-title text-sm sm:text-base">注文一覧</h3>
+                                <input
+                                    type="text"
+                                    id="orderSearchInput"
+                                    onkeyup="filterOrders()"
+                                    placeholder="生徒番号または商品名で検索"
+                                    class="input input-sm w-full sm:w-56 font-bold"
+                                >
+                            </div>
 
-                        <!-- 並び替え -->
-                        <div class="flex items-center gap-2 text-xs font-black text-stone-600">
-                            <label for="adminSortSelect" class="whitespace-nowrap">↕️ 並び替え</label>
-                            <select
-                                id="adminSortSelect"
-                                onchange="onSortSelectChange()"
-                                class="flex-1 px-2.5 py-1.5 bg-stone-50 border-2 border-stone-200 rounded-xl text-xs font-bold outline-none focus:border-appNavyAccent cursor-pointer"
-                            >
-                                <option value="studentId:asc">生徒番号（小さい順）</option>
-                                <option value="studentId:desc">生徒番号（大きい順）</option>
-                                <option value="productName:asc">お弁当名（あいうえお順）</option>
-                                <option value="productName:desc">お弁当名（逆順）</option>
-                                <option value="quantity:desc">個数（多い順）</option>
-                                <option value="quantity:asc">個数（少ない順）</option>
-                                <option value="time:asc" selected>予約時間（早い順）</option>
-                                <option value="time:desc">予約時間（遅い順）</option>
-                                <option value="delivered:asc">受渡状態（未受渡が先）</option>
-                                <option value="delivered:desc">受渡状態（受渡済が先）</option>
-                            </select>
-                        </div>
-                        <p class="text-[10px] text-stone-400 font-bold -mt-1">※ 表の見出し（生徒番号・予約商品など）をタップしても並び替えできます</p>
+                            <!-- 並び替え -->
+                            <div class="flex items-center gap-2 text-xs font-black c-muted">
+                                <label for="adminSortSelect" class="whitespace-nowrap">↕️ 並び替え</label>
+                                <select
+                                    id="adminSortSelect"
+                                    onchange="onSortSelectChange()"
+                                    class="select select-sm flex-1 font-bold"
+                                >
+                                    <option value="studentId:asc">生徒番号（小さい順）</option>
+                                    <option value="studentId:desc">生徒番号（大きい順）</option>
+                                    <option value="productName:asc">お弁当名（あいうえお順）</option>
+                                    <option value="productName:desc">お弁当名（逆順）</option>
+                                    <option value="quantity:desc">個数（多い順）</option>
+                                    <option value="quantity:asc">個数（少ない順）</option>
+                                    <option value="time:asc" selected>予約時間（早い順）</option>
+                                    <option value="time:desc">予約時間（遅い順）</option>
+                                    <option value="delivered:asc">受渡状態（未受渡が先）</option>
+                                    <option value="delivered:desc">受渡状態（受渡済が先）</option>
+                                </select>
+                            </div>
+                            <p class="text-[10px] c-faint font-bold -mt-1">※ 表の見出し（生徒番号・予約商品など）をタップしても並び替えできます</p>
 
-                        <div class="overflow-x-auto rounded-2xl border border-stone-200">
-                            <table class="w-full text-left border-collapse text-xs min-w-[420px]">
-                                <thead>
-                                    <tr class="bg-stone-100 border-b border-stone-200 text-stone-600 font-bold text-[10px] tracking-wider uppercase">
-                                        <th class="py-2.5 px-2.5" data-sort="studentId" onclick="setAdminSort('studentId')">生徒番号<span class="sort-ind"></span></th>
-                                        <th class="py-2.5 px-2.5" data-sort="productName" onclick="setAdminSort('productName')">予約商品<span class="sort-ind"></span></th>
-                                        <th class="py-2.5 px-2.5 text-center" data-sort="quantity" onclick="setAdminSort('quantity')">個数<span class="sort-ind"></span></th>
-                                        <th class="py-2.5 px-2.5" data-sort="time" onclick="setAdminSort('time')">時間<span class="sort-ind"></span></th>
-                                        <th class="py-2.5 px-2.5 text-right" data-sort="delivered" onclick="setAdminSort('delivered')">受渡状態<span class="sort-ind"></span></th>
-                                    </tr>
-                                </thead>
-                                <tbody id="adminOrderTable" class="divide-y divide-stone-100 font-bold text-stone-800">
-                                    <tr>
-                                        <td colspan="5" class="py-6 text-center text-stone-400 font-normal">注文データを取得しています...</td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                            <div class="overflow-x-auto rounded-box bd">
+                                <table class="table table-sm min-w-[420px]">
+                                    <thead>
+                                        <tr class="text-[10px] tracking-wider uppercase">
+                                            <th data-sort="studentId" onclick="setAdminSort('studentId')">生徒番号<span class="sort-ind"></span></th>
+                                            <th data-sort="productName" onclick="setAdminSort('productName')">予約商品<span class="sort-ind"></span></th>
+                                            <th class="text-center" data-sort="quantity" onclick="setAdminSort('quantity')">個数<span class="sort-ind"></span></th>
+                                            <th data-sort="time" onclick="setAdminSort('time')">時間<span class="sort-ind"></span></th>
+                                            <th class="text-right" data-sort="delivered" onclick="setAdminSort('delivered')">受渡状態<span class="sort-ind"></span></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="adminOrderTable" class="font-bold">
+                                        <tr>
+                                            <td colspan="5" class="py-6 text-center c-faint font-normal">注文データを取得しています...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- サブタブ2: メニュー追加・価格・在庫管理 -->
-                <div id="adminProductsSection" class="hidden space-y-4 fade-in-up">
-                    <div class="bg-appWarmBg border-2 border-amber-200 rounded-3xl p-4 shadow-md space-y-3">
-                        <h3 class="text-sm font-black text-stone-800 flex items-center gap-1">
-                            <span>✨</span> 新規メニューの追加
-                        </h3>
-                        <form onsubmit="handleAddNewProduct(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                            <div>
-                                <label class="block text-[10px] font-black text-stone-600 mb-0.5" for="newProdName">商品名</label>
-                                <input type="text" id="newProdName" required placeholder="例: カツ丼" class="w-full px-2.5 py-1.5 bg-stone-50 border border-stone-300 rounded-xl text-xs font-bold outline-none focus:border-appWarmAmber">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-black text-stone-600 mb-0.5" for="newProdPrice">価格 (円)</label>
-                                <input type="number" id="newProdPrice" required min="0" placeholder="例: 480" class="w-full px-2.5 py-1.5 bg-stone-50 border border-stone-300 rounded-xl text-xs font-bold outline-none focus:border-appWarmAmber">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-black text-stone-600 mb-0.5" for="newProdStock">1日の在庫数</label>
-                                <input type="number" id="newProdStock" required min="0" placeholder="例: 20" class="w-full px-2.5 py-1.5 bg-stone-50 border border-stone-300 rounded-xl text-xs font-bold outline-none focus:border-appWarmAmber">
-                            </div>
-                            <div class="sm:col-span-3 pt-1">
-                                <button type="submit" class="w-full py-2 bg-appWarmAmber hover:bg-amber-600 text-white font-black text-xs rounded-xl shadow-xs transition-all cursor-pointer active:scale-95">
-                                    ＋ メニューを追加する
-                                </button>
-                            </div>
-                        </form>
+                <div id="adminProductsSection" class="hidden flex flex-col gap-4 fade-in-up">
+                    <div class="card bg-b1 card-border shadow-md">
+                        <div class="card-body p-4 gap-3">
+                            <h3 class="card-title text-sm gap-1">
+                                <span>✨</span> 新規メニューの追加
+                            </h3>
+                            <form onsubmit="handleAddNewProduct(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                <fieldset class="fieldset p-0">
+                                    <legend class="fieldset-legend text-[10px] font-black py-0.5"><label for="newProdName">商品名</label></legend>
+                                    <input type="text" id="newProdName" required placeholder="例: カツ丼" class="input input-sm w-full font-bold">
+                                </fieldset>
+                                <fieldset class="fieldset p-0">
+                                    <legend class="fieldset-legend text-[10px] font-black py-0.5"><label for="newProdPrice">価格 (円)</label></legend>
+                                    <input type="number" id="newProdPrice" required min="0" placeholder="例: 480" class="input input-sm w-full font-bold">
+                                </fieldset>
+                                <fieldset class="fieldset p-0">
+                                    <legend class="fieldset-legend text-[10px] font-black py-0.5"><label for="newProdStock">1日の在庫数</label></legend>
+                                    <input type="number" id="newProdStock" required min="0" placeholder="例: 20" class="input input-sm w-full font-bold">
+                                </fieldset>
+                                <div class="sm:col-span-3 pt-1">
+                                    <button type="submit" class="btn btn-primary btn-sm w-full font-black">
+                                        ＋ メニューを追加する
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
 
-                    <div class="bg-appWarmBg border-2 border-stone-200 rounded-3xl p-4 shadow-md space-y-3">
-                        <h3 class="text-sm font-black text-stone-800">登録済みメニュー管理</h3>
-                        <div class="overflow-x-auto rounded-2xl border border-stone-200">
-                            <table class="w-full text-left border-collapse text-xs min-w-[450px]">
-                                <thead>
-                                    <tr class="bg-stone-100 border-b border-stone-200 text-stone-600 font-bold text-[10px] tracking-wider uppercase">
-                                        <th class="py-2.5 px-2.5">商品名</th>
-                                        <th class="py-2.5 px-2.5">価格</th>
-                                        <th class="py-2.5 px-2.5 text-center">予約数</th>
-                                        <th class="py-2.5 px-2.5">1日の在庫数</th>
-                                        <th class="py-2.5 px-2.5 text-right">操作</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="adminProductsTable" class="divide-y divide-stone-100 font-bold text-stone-800">
-                                    <tr>
-                                        <td colspan="5" class="py-6 text-center text-stone-400 font-normal">読み込み中...</td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                    <div class="card bg-b1 card-border shadow-md">
+                        <div class="card-body p-4 gap-3">
+                            <h3 class="card-title text-sm">登録済みメニュー管理</h3>
+                            <div class="overflow-x-auto rounded-box bd">
+                                <table class="table table-sm min-w-[450px]">
+                                    <thead>
+                                        <tr class="text-[10px] tracking-wider uppercase">
+                                            <th>商品名</th>
+                                            <th>価格</th>
+                                            <th class="text-center">予約数</th>
+                                            <th>1日の在庫数</th>
+                                            <th class="text-right">操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="adminProductsTable" class="font-bold">
+                                        <tr>
+                                            <td colspan="5" class="py-6 text-center c-faint font-normal">読み込み中...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -903,53 +900,53 @@
         <div class="balan-leaf"></div>
     </div>
 
-    <!-- 初回の案内（ホーム画面に追加 / 通知を許可） -->
-    <div id="onboardOverlay" class="hidden fixed inset-0 z-[60] bg-black/50 flex items-end sm:items-center justify-center p-3">
-        <div class="w-full max-w-md bg-appWarmBg border-2 border-orange-100 rounded-3xl p-5 shadow-2xl space-y-3.5 max-h-[90vh] overflow-y-auto fade-in-up">
-            <div class="text-center space-y-0.5">
+    <!-- 初回の案内（ホーム画面に追加 / 通知を許可）: daisyUI の modal -->
+    <div id="onboardOverlay" class="hidden modal modal-open modal-bottom sm:modal-middle" role="dialog" aria-modal="true">
+        <div class="modal-box bg-b1 max-w-md flex flex-col gap-3.5">
+            <div class="text-center flex flex-col gap-0.5">
                 <div class="text-3xl">🍱</div>
-                <h2 class="text-lg font-black text-stone-800 font-pop">はじめにかんたん設定</h2>
-                <p class="text-[11px] font-bold text-stone-500">アプリのように使えて、予約のしわすれも防げます</p>
+                <h2 class="text-lg font-black font-pop">はじめにかんたん設定</h2>
+                <p class="text-[11px] font-bold c-muted">アプリのように使えて、予約のしわすれも防げます</p>
             </div>
 
             <!-- ① ホーム画面に追加 -->
-            <div id="obInstall" class="hidden bg-stone-50 border border-stone-200 rounded-2xl p-3.5 space-y-2">
-                <div class="font-black text-xs sm:text-sm text-stone-800">① ホーム画面に追加</div>
-                <div id="obIosSteps" class="hidden text-[11px] font-bold text-stone-600 leading-relaxed">
+            <div id="obInstall" class="hidden rounded-box bg-soft bd p-3.5 flex flex-col gap-2">
+                <div class="font-black text-xs sm:text-sm">① ホーム画面に追加</div>
+                <div id="obIosSteps" class="hidden text-[11px] font-bold c-muted leading-relaxed">
                     Safariの<strong>共有ボタン（□に↑）</strong>を押し、「<strong>ホーム画面に追加</strong>」→「追加」を選びます。<br>
                     追加できたら、<strong>ホーム画面のアイコンから開いてください。</strong>
                 </div>
-                <button type="button" id="obAndroidBtn" onclick="obInstall()" class="hidden w-full py-2.5 bg-appWarmAmber hover:bg-amber-600 active:scale-95 text-white font-black text-xs sm:text-sm rounded-xl cursor-pointer shadow-xs">📲 ホーム画面に追加する</button>
-                <div id="obAndroidManual" class="hidden text-[11px] font-bold text-stone-600 leading-relaxed">
+                <button type="button" id="obAndroidBtn" onclick="obInstall()" class="hidden btn btn-primary w-full font-black">📲 ホーム画面に追加する</button>
+                <div id="obAndroidManual" class="hidden text-[11px] font-bold c-muted leading-relaxed">
                     ブラウザのメニュー（⋮）から、「<strong>ホーム画面に追加</strong>」または「<strong>アプリをインストール</strong>」を選んでください。
                 </div>
             </div>
 
             <!-- ② 通知 -->
-            <div id="obPush" class="hidden bg-amber-50 border border-amber-200 rounded-2xl p-3.5 space-y-2">
-                <div class="font-black text-xs sm:text-sm text-stone-800">② 通知をオンにする</div>
-                <p class="text-[11px] font-bold text-stone-600 leading-relaxed">
+            <div id="obPush" class="hidden note-warn rounded-box p-3.5 flex flex-col gap-2 text-left">
+                <div class="font-black text-xs sm:text-sm">② 通知をオンにする</div>
+                <p class="text-[11px] font-bold leading-relaxed">
                     <strong>前日20時の「予約しわすれ」</strong>と<strong>当日朝の「今日のお弁当」</strong>をお知らせします。
                 </p>
-                <div id="obPushIosNote" class="hidden text-[11px] font-black text-amber-900 leading-relaxed">
+                <div id="obPushIosNote" class="hidden text-[11px] font-black leading-relaxed">
                     通知は、①の<strong>ホーム画面のアイコンから開いたあと</strong>に設定できます。まず①を行ってください。
                 </div>
-                <div id="obPushForm" class="space-y-2">
+                <div id="obPushForm" class="flex flex-col gap-2">
                     <input
                         type="number"
                         id="obStudentId"
                         inputmode="numeric"
-                        class="w-full px-3.5 py-2.5 bg-stone-50 border-2 border-stone-200 rounded-xl text-base font-black text-stone-800 outline-none focus:border-appWarmAmber"
+                        class="input w-full font-black"
                         placeholder="生徒番号（4桁）"
                         min="1000"
                         max="9999"
                     >
-                    <button type="button" id="obPushBtn" onclick="obEnablePush()" class="w-full py-2.5 bg-appWarmAmber hover:bg-amber-600 active:scale-95 text-white font-black text-xs sm:text-sm rounded-xl cursor-pointer shadow-xs">🔔 通知を許可する</button>
+                    <button type="button" id="obPushBtn" onclick="obEnablePush()" class="btn btn-primary w-full font-black">🔔 通知を許可する</button>
                 </div>
-                <div id="obPushStatus" class="text-[11px] font-black text-stone-600"></div>
+                <div id="obPushStatus" class="text-[11px] font-black c-muted"></div>
             </div>
 
-            <button type="button" onclick="obLater()" class="w-full py-2 text-xs font-black text-stone-500 hover:text-stone-900 cursor-pointer">あとで（3日間表示しません）</button>
+            <button type="button" onclick="obLater()" class="btn btn-ghost btn-sm w-full font-black c-muted">あとで（3日間表示しません）</button>
         </div>
     </div>
 
@@ -1003,12 +1000,12 @@
 
         // ブタのセリフリスト（インタラクティブ表示用）
         const pigDialogues = [
-            "ブヒッ！予約は前日13時〜21時<br><span class='text-appAccentRed font-black'>忘れずに予約だブ！🐷</span>",
-            "生姜焼き食べたら<br><span class='text-appWarmAmber font-black'>共食いだブ！🍗</span>",
-            "タップしてくれて<br><span class='text-emerald-600 font-black'>ありがとうブ！🐽</span>",
-            "お腹がすいたら<br><span class='text-appAccentRed font-black'>大将軍弁当だブ！🍱</span>",
-            "キャンセルは当日<br><span class='text-appAccentRed font-black'>朝9:30までだブ！⏰</span>",
-            "豚をぶったら<br><span class='text-amber-800 font-black'>トンでった！</span>"
+            "ブヒッ！予約は前日13時〜21時<br><span class='c-accent font-black'>忘れずに予約だブ！🐷</span>",
+            "生姜焼き食べたら<br><span class='c-primary font-black'>共食いだブ！🍗</span>",
+            "タップしてくれて<br><span class='c-success font-black'>ありがとうブ！🐽</span>",
+            "お腹がすいたら<br><span class='c-accent font-black'>大将軍弁当だブ！🍱</span>",
+            "キャンセルは当日<br><span class='c-accent font-black'>朝9:30までだブ！⏰</span>",
+            "豚をぶったら<br><span class='c-secondary font-black'>トンでった！</span>"
         ];
         let pigDialogueIndex = 0;
 
@@ -1113,6 +1110,7 @@
 
         function applyTheme(t) {
             document.documentElement.classList.toggle('dark', t === 'dark');
+            document.documentElement.setAttribute('data-theme', t === 'dark' ? 'bentodark' : 'bento');   // daisyUI のテーマ
             const b = document.getElementById('themeToggleBtn');
             if (b) b.textContent = (t === 'dark') ? '☀️' : '🌙';
             const meta = document.querySelector('meta[name="theme-color"]');
@@ -1182,7 +1180,7 @@
             const el = document.getElementById('pushStatus');
             if (!el) return;
             el.textContent = msg;
-            el.className = 'text-[11px] font-black ' + (isError ? 'text-rose-600' : 'text-stone-600');
+            el.className = 'text-[11px] font-black ' + (isError ? 'c-error' : 'c-muted');
         }
 
         function isIosDevice() {
@@ -1392,7 +1390,7 @@
 
             if (!/^[0-9]{4}$/.test(sid)) {
                 st.textContent = '生徒番号を4桁で入力してください。';
-                st.className = 'text-[11px] font-black text-rose-600';
+                st.className = 'text-[11px] font-black c-error';
                 SFX.play('error');
                 return;
             }
@@ -1401,7 +1399,7 @@
             btn.disabled = false;
 
             st.textContent = r.message;
-            st.className = 'text-[11px] font-black ' + (r.ok ? 'text-emerald-600' : 'text-rose-600');
+            st.className = 'text-[11px] font-black ' + (r.ok ? 'c-success' : 'c-error');
             if (r.ok) {
                 SFX.play('ding');
                 const my = document.getElementById('myStudentIdInput');
@@ -1603,8 +1601,8 @@
             const btnMy = document.getElementById('tabMyOrders');
             const cardRes = document.getElementById('reservationCard');
             const cardMy = document.getElementById('myOrdersCard');
-            const active = 'py-2.5 px-2 rounded-xl bg-appWarmAmber text-white shadow-xs transition-all duration-200 flex items-center justify-center gap-1 cursor-pointer active:scale-95';
-            const inactive = 'py-2.5 px-2 rounded-xl text-stone-600 hover:text-stone-900 transition-all duration-200 flex items-center justify-center gap-1 cursor-pointer active:scale-95';
+            const active = 'btn join-item flex-1 btn-primary';
+            const inactive = 'btn join-item flex-1 btn-ghost';
 
             // 完了チケット表示中にタブを切り替えたら閉じる
             document.getElementById('completionCard').classList.add('hidden');
@@ -1633,8 +1631,8 @@
             const btnProducts = document.getElementById('adminTabProductsBtn');
             const secOrders = document.getElementById('adminOrdersSection');
             const secProducts = document.getElementById('adminProductsSection');
-            const active = 'py-2 px-2 rounded-xl bg-appNavyAccent text-white shadow-xs transition-all cursor-pointer';
-            const inactive = 'py-2 px-2 rounded-xl text-stone-600 hover:text-stone-900 transition-all cursor-pointer';
+            const active = 'btn join-item flex-1 btn-secondary';
+            const inactive = 'btn join-item flex-1 btn-ghost';
 
             if (tab === 'orders') {
                 btnOrders.className = active;
@@ -1760,19 +1758,15 @@
             container.innerHTML = '';
 
             const badges = ['🥇 1位', '🥈 2位', '🥉 3位'];
-            const badgeStyles = [
-                'bg-amber-100 text-amber-900 border-amber-300',
-                'bg-stone-200 text-stone-800 border-stone-300',
-                'bg-orange-100 text-orange-900 border-orange-200'
-            ];
+            const badgeStyles = ['badge-warning', 'badge-neutral', 'badge-primary badge-soft'];
 
             ranking.forEach((item, index) => {
                 const el = document.createElement('div');
-                el.className = `p-1.5 rounded-xl border ${badgeStyles[index] || 'bg-stone-100 text-stone-700 border-stone-200'} flex flex-col items-center justify-between shadow-xs`;
+                el.className = 'p-1.5 rounded-box bg-b1 bd flex flex-col items-center justify-between gap-0.5 shadow-xs';
                 el.innerHTML = `
-                    <span class="font-black text-[9px] uppercase px-1.5 py-0.5 rounded-full bg-white/90 mb-0.5">${badges[index]}</span>
-                    <span class="font-black text-[11px] text-stone-800 truncate w-full">${escapeHtml(item.name)}</span>
-                    <span class="text-[9px] font-bold text-stone-600 mt-0.5">${item.reserved}個予約</span>
+                    <span class="badge badge-xs font-black ${badgeStyles[index] || 'badge-ghost'}">${badges[index]}</span>
+                    <span class="font-black text-[11px] truncate w-full">${escapeHtml(item.name)}</span>
+                    <span class="text-[9px] font-bold c-muted">${item.reserved}個予約</span>
                 `;
                 container.appendChild(el);
             });
@@ -1792,7 +1786,7 @@
             }
 
             if (keepStatus !== true) statusEl.classList.add('hidden');
-            resultEl.innerHTML = '<p class="text-xs text-stone-400 text-center py-6 font-bold">検索中...</p>';
+            resultEl.innerHTML = '<p class="text-xs c-faint text-center py-6 font-bold">検索中...</p>';
 
             try {
                 const res = await rpc('get_my_orders', { p_student_id: studentId });
@@ -1814,13 +1808,13 @@
 
             const orders = res.orders || [];
             if (orders.length === 0) {
-                resultEl.innerHTML = '<p class="text-xs text-stone-400 text-center py-6 font-bold">予約はありません</p>';
+                resultEl.innerHTML = '<p class="text-xs c-faint text-center py-6 font-bold">予約はありません</p>';
                 return;
             }
 
             orders.forEach(ord => {
                 const card = document.createElement('div');
-                card.className = 'bg-stone-50 border border-stone-200 rounded-2xl p-3.5 space-y-2.5 font-bold shadow-xs';
+                card.className = 'card card-border bg-soft shadow-xs font-bold';
 
                 // 個数変更：受付時間内（サーバー判定）のみ
                 const isEditable = !!ord.editable;
@@ -1833,46 +1827,48 @@
                 if (canCancel) {
                     footerHtml = `
                         <div class="pt-1 flex justify-between items-center gap-2">
-                            <span class="text-[10px] text-stone-400 font-bold">キャンセルは当日 9:30 まで</span>
+                            <span class="text-[10px] c-faint font-bold">キャンセルは当日 9:30 まで</span>
                             <button
                                 type="button"
                                 data-role="cancel"
-                                class="px-2.5 py-1 text-[11px] font-black text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-lg transition-colors border border-rose-200 cursor-pointer"
+                                class="btn btn-xs btn-error btn-soft font-black"
                             >
                                 🗑️ 予約を取り消す
                             </button>
                         </div>`;
                 } else if (!ord.delivered) {
-                    footerHtml = `<div class="pt-1 text-right text-[10px] text-stone-400 font-bold">※ キャンセル受付は当日9:30で終了しました</div>`;
+                    footerHtml = `<div class="pt-1 text-right text-[10px] c-faint font-bold">※ キャンセル受付は当日9:30で終了しました</div>`;
                 }
 
                 card.innerHTML = `
+                  <div class="card-body p-3.5 gap-2.5">
                     <div class="flex justify-between items-start">
                         <div>
-                            <div class="font-black text-xs sm:text-sm text-stone-800">${escapeHtml(ord.productName)}</div>
-                            <div class="text-[10px] text-stone-400 font-normal mt-0.5">受け取り日: ${escapeHtml(formatDateJP(ord.pickupDate))} ／ 予約時刻: ${escapeHtml(ord.time)}</div>
+                            <div class="font-black text-xs sm:text-sm">${escapeHtml(ord.productName)}</div>
+                            <div class="text-[10px] c-faint font-normal mt-0.5">受け取り日: ${escapeHtml(formatDateJP(ord.pickupDate))} ／ 予約時刻: ${escapeHtml(ord.time)}</div>
                         </div>
-                        <span class="px-2.5 py-0.5 text-[10px] sm:text-xs font-black rounded-full ${ord.delivered ? 'bg-emerald-500 text-white' : 'bg-amber-100 text-appWarmAmber border border-amber-200'}">
+                        <span class="badge font-black ${ord.delivered ? 'badge-success' : 'badge-primary badge-soft'}">
                             ${ord.delivered ? '✓ 受渡済' : '予約完了'}
                         </span>
                     </div>
 
-                    <div class="flex justify-between items-center text-xs pt-1.5 border-t border-stone-200">
-                        <div class="flex items-center space-x-1.5">
-                            <span class="text-stone-500">個数:</span>
+                    <div class="flex justify-between items-center text-xs pt-1.5 bd-t">
+                        <div class="flex items-center gap-1.5">
+                            <span class="c-muted">個数:</span>
                             ${isEditable ? `
-                                <select data-role="qty" class="bg-white border border-stone-300 rounded-lg px-2 py-0.5 text-xs font-black text-stone-800 cursor-pointer">
+                                <select data-role="qty" class="select select-xs w-auto font-black">
                                     ${[1,2,3,4,5].map(n => `<option value="${n}" ${n === ord.quantity ? 'selected' : ''}>${n} 個</option>`).join('')}
                                 </select>
-                            ` : `<span class="font-bold text-stone-800">${ord.quantity} 個</span>`}
+                            ` : `<span class="font-bold">${ord.quantity} 個</span>`}
                         </div>
                         <div class="text-right">
-                            <span class="text-stone-500">小計: </span>
-                            <span class="font-black text-appAccentRed text-sm sm:text-base">¥${ord.totalPrice.toLocaleString()}</span>
+                            <span class="c-muted">小計: </span>
+                            <span class="font-black c-accent text-sm sm:text-base">¥${ord.totalPrice.toLocaleString()}</span>
                         </div>
                     </div>
 
                     ${footerHtml}
+                  </div>
                 `;
 
                 // イベントは addEventListener で結び付ける（HTML文字列に値を埋め込まない）
@@ -1921,7 +1917,7 @@
             SFX.play(sound || (isError ? 'error' : 'ding'));
             const el = document.getElementById('myOrdersStatus');
             el.textContent = msg;
-            el.className = `text-xs font-black p-3 rounded-xl border-2 ${isError ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-emerald-50 text-emerald-800 border-emerald-200'}`;
+            el.className = `alert alert-soft ${isError ? 'alert-error' : 'alert-success'} text-xs font-black`;
             el.classList.remove('hidden');
         }
 
@@ -2043,19 +2039,19 @@
 
             const keys = Object.keys(summary);
             if (keys.length === 0) {
-                container.innerHTML = '<p class="text-xs text-stone-400 col-span-full font-medium">この日の注文はまだありません</p>';
+                container.innerHTML = '<p class="text-xs c-faint col-span-full font-medium">この日の注文はまだありません</p>';
                 return;
             }
 
             keys.forEach(key => {
                 const item = summary[key];
                 const card = document.createElement('div');
-                card.className = 'bg-stone-50 p-2.5 rounded-2xl border border-stone-200 shadow-xs';
+                card.className = 'bg-soft p-2.5 rounded-box bd shadow-xs';
                 card.innerHTML = `
-                    <div class="font-black text-[11px] text-stone-800 truncate">${escapeHtml(key)}</div>
+                    <div class="font-black text-[11px] truncate">${escapeHtml(key)}</div>
                     <div class="mt-0.5 flex justify-between items-baseline">
-                        <span class="text-[9px] text-stone-500 font-bold">受渡/予約</span>
-                        <span class="text-xs font-black ${item.delivered === item.total ? 'text-emerald-600' : 'text-appWarmAmber'}">
+                        <span class="text-[9px] c-muted font-bold">受渡/予約</span>
+                        <span class="text-xs font-black ${item.delivered === item.total ? 'c-success' : 'c-primary'}">
                             ${item.delivered} / ${item.total}個
                         </span>
                     </div>
@@ -2069,27 +2065,23 @@
             tbody.innerHTML = '';
 
             if (!orders || orders.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-stone-400 font-medium">この日の注文データはありません</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center c-faint font-medium">この日の注文データはありません</td></tr>';
                 return;
             }
 
             orders.forEach(ord => {
                 const tr = document.createElement('tr');
-                tr.className = ord.delivered ? 'bg-emerald-50/50' : 'hover:bg-stone-50';
+                tr.className = ord.delivered ? 'row-delivered' : 'hover:bg-soft';
                 tr.innerHTML = `
-                    <td class="py-2.5 px-2.5 font-black text-appWarmAmber">${escapeHtml(ord.studentId)}</td>
-                    <td class="py-2.5 px-2.5 font-bold text-stone-800">${escapeHtml(ord.productName)}</td>
-                    <td class="py-2.5 px-2.5 text-center font-black text-stone-700">${ord.quantity}</td>
-                    <td class="py-2.5 px-2.5 text-stone-400 text-[10px] font-normal">${escapeHtml(ord.time)}</td>
-                    <td class="py-2.5 px-2.5 text-right">
+                    <td class="font-black c-primary">${escapeHtml(ord.studentId)}</td>
+                    <td class="font-bold">${escapeHtml(ord.productName)}</td>
+                    <td class="text-center font-black">${ord.quantity}</td>
+                    <td class="c-faint text-[10px] font-normal">${escapeHtml(ord.time)}</td>
+                    <td class="text-right">
                         <button
                             type="button"
                             data-role="toggle"
-                            class="px-2.5 py-1 text-xs font-black rounded-xl transition-all duration-150 cursor-pointer active:scale-95 ${
-                                ord.delivered
-                                    ? 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-xs'
-                                    : 'bg-stone-200 text-stone-700 hover:bg-stone-300'
-                            }"
+                            class="btn btn-xs font-black ${ord.delivered ? 'btn-success' : 'btn-neutral btn-soft'}"
                         >
                             ${ord.delivered ? '✓ 受渡済' : '未受渡'}
                         </button>
@@ -2320,34 +2312,34 @@
             tbody.innerHTML = '';
 
             if (!products || products.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-stone-400 font-medium">登録された商品はありません</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center c-faint font-medium">登録された商品はありません</td></tr>';
                 return;
             }
 
             products.forEach(p => {
                 const tr = document.createElement('tr');
-                tr.className = 'hover:bg-stone-50';
+                tr.className = 'hover:bg-soft';
                 tr.innerHTML = `
-                    <td class="py-2.5 px-2.5 font-black text-stone-800">${escapeHtml(p.name)}</td>
-                    <td class="py-2.5 px-2.5">
-                        <input type="number" min="0" id="prodPrice_${p.id}" value="${p.price}" class="w-16 px-1.5 py-1 bg-white border border-stone-300 rounded-lg text-xs font-bold text-appAccentRed">
+                    <td class="font-black">${escapeHtml(p.name)}</td>
+                    <td>
+                        <input type="number" min="0" id="prodPrice_${p.id}" value="${p.price}" class="input input-xs w-16 font-bold c-accent">
                     </td>
-                    <td class="py-2.5 px-2.5 text-center font-black text-stone-600">${p.reserved} 個</td>
-                    <td class="py-2.5 px-2.5">
-                        <input type="number" min="0" id="prodStock_${p.id}" value="${p.stock}" class="w-16 px-1.5 py-1 bg-white border border-stone-300 rounded-lg text-xs font-bold text-stone-800">
+                    <td class="text-center font-black c-muted">${p.reserved} 個</td>
+                    <td>
+                        <input type="number" min="0" id="prodStock_${p.id}" value="${p.stock}" class="input input-xs w-16 font-bold">
                     </td>
-                    <td class="py-2.5 px-2.5 text-right space-x-1">
+                    <td class="text-right whitespace-nowrap">
                         <button
                             type="button"
                             data-role="save"
-                            class="px-2 py-1 text-xs font-black text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-xs cursor-pointer active:scale-95"
+                            class="btn btn-xs btn-success font-black"
                         >
                             保存
                         </button>
                         <button
                             type="button"
                             data-role="delete"
-                            class="px-1.5 py-1 text-xs font-black text-rose-600 hover:bg-rose-100 rounded-lg cursor-pointer"
+                            class="btn btn-xs btn-error btn-ghost font-black"
                         >
                             削除
                         </button>
@@ -2437,9 +2429,7 @@
             SFX.play(sound || (isError ? 'error' : 'ding'));
             const el = document.getElementById('adminStatusAlert');
             el.textContent = msg;
-            el.className = `p-3 rounded-2xl text-xs font-black border-2 fade-in-up ${
-                isError ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-emerald-50 text-emerald-800 border-emerald-200'
-            }`;
+            el.className = `alert alert-soft ${isError ? 'alert-error' : 'alert-success'} text-xs font-black fade-in-up`;
             el.classList.remove('hidden');
             setTimeout(() => el.classList.add('hidden'), 4000);
         }
@@ -2564,7 +2554,7 @@
             SFX.play('error');
             const el = document.getElementById('statusMessage');
             el.textContent = msg;
-            el.className = 'p-3 rounded-2xl text-xs sm:text-sm font-black bg-rose-50 text-rose-700 border-2 border-rose-200';
+            el.className = 'alert alert-error alert-soft text-xs sm:text-sm font-black';
             el.classList.remove('hidden');
         }
 
